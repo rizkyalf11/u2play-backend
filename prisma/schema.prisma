@@ -25,6 +25,11 @@ enum Provider {
   credential
 }
 
+enum Visibility {
+  PRIVATE
+  PUBLIC
+}
+
 model User {
   id       Int   @id @default(autoincrement()) @db.UnsignedInt
   clientId String? @map("client_id")
@@ -38,8 +43,77 @@ model User {
   provider Provider @default(credential)
   avatar  String?  
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  // Articles  Articles[]
 
   @@map("users")
+}
+
+model Tag {
+  id         Int   @id @default(autoincrement())
+  name       String   @db.VarChar(255)
+  slug       String   @db.VarChar(255)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  article_tags ArticleTag[]
+
+  @@map("tags")
+}
+
+model Category {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  slug       String    @db.VarChar(255)
+  parent_id  Int?      
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  // Relasi self-reference
+  parent   Category?  @relation("CategoryHierarchy", fields: [parent_id], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+
+  articles Articles[]
+
+  @@map("categories")
+}
+
+model Articles {
+  id           Int     @id @default(autoincrement())
+  author_id    Int?
+  title        String     @db.VarChar(255)
+  description  String     @db.VarChar(500)
+  slug         String     @db.VarChar(255)
+  category_id  Int
+  content      String     @db.LongText
+  visibility   Visibility @default(PRIVATE)
+  published_at DateTime?
+  view_count   Int        @default(0)
+  like_count   Int        @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+
+  // Relations
+  // author       User         @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  category     Category     @relation(fields: [category_id], references: [id])
+  article_tags ArticleTag[]
+
+  @@map("articles")
+}
+
+model ArticleTag {
+  id         Int   @id @default(autoincrement())
+  article_id Int
+  tag_id     Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  article Articles @relation(fields: [article_id], references: [id], onDelete: Cascade)
+  tag     Tag      @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@unique([article_id, tag_id])
+  @@map("article_tags")
 }
