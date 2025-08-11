@@ -25,9 +25,14 @@ enum Provider {
   credential
 }
 
+enum Visibility {
+  PRIVATE
+  PUBLIC
+}
+
 model User {
   id       BigInt   @id @default(autoincrement())
-  clientId String? @map("client_id")
+  clientId String?  @map("client_id")
   name     String
   username String
   email    String   @unique
@@ -37,8 +42,76 @@ model User {
   nik      String?
   provider Provider @default(credential)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  Articles  Articles[]
 
   @@map("users")
+}
+
+model Tag {
+  id         BigInt   @id @default(autoincrement())
+  name       String   @db.VarChar(255)
+  slug       String   @db.VarChar(255)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  article_tags ArticleTag[]
+
+  @@map("tags")
+}
+
+model Category {
+  id         BigInt   @id @default(autoincrement())
+  name       String   @db.VarChar(255)
+  slug       String   @db.VarChar(255)
+  parent_id  BigInt? // <-- ini opsional
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  articles Articles[]
+  parent   Category?  @relation("CategoryHierarchy", fields: [parent_id], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+
+  @@map("categories")
+}
+
+model Articles {
+  id           BigInt     @id @default(autoincrement())
+  author_id    BigInt     @map("author_id")
+  title        String     @db.VarChar(255)
+  description  String     @db.VarChar(500)
+  slug         String     @db.VarChar(255)
+  category_id  BigInt
+  content      String     @db.LongText
+  visibility   Visibility @default(PRIVATE)
+  published_at DateTime?
+  view_count   Int        @default(0)
+  like_count   Int        @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+
+  // Relations
+  author       User         @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  category     Category     @relation(fields: [category_id], references: [id])
+  article_tags ArticleTag[]
+
+  @@map("articles")
+}
+
+model ArticleTag {
+  id         BigInt   @id @default(autoincrement())
+  article_id BigInt
+  tag_id     BigInt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  article Articles @relation(fields: [article_id], references: [id], onDelete: Cascade)
+  tag     Tag      @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@unique([article_id, tag_id])
+  @@map("article_tags")
 }
