@@ -39,9 +39,9 @@ export class AuthDTO {
   @ApiProperty({ example: 'user@gmail.com', description: 'Account email' })
   email: string;
 
-//   @IsString()
-//   @IsOptional()
-//   avatar: string;
+  //   @IsString()
+  //   @IsOptional()
+  //   avatar: string;
 
   @IsEnum(AuthRole)
   @IsOptional()
@@ -62,5 +62,5 @@ export class RegisterDto extends PickType(AuthDTO, [
   'name',
   'email',
   'password',
-  'username'
+  'username',
 ]) {}
