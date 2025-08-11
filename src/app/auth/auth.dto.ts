@@ -1,4 +1,4 @@
-import { ApiProperty, PickType } from '@nestjs/swagger';
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
 import { AuthRole, Provider } from '@prisma/client';
 import {
   IsEmail,
@@ -67,4 +67,7 @@ export class RegisterDto extends PickType(AuthDTO, [
 export class LoginDto extends PickType(AuthDTO, [
   'email',
   'password',
+]) {}
+export class CreateUserDto extends OmitType(AuthDTO, [
+    'id'
 ]) {}

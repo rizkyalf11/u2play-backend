@@ -25,15 +25,17 @@ export class RoleGuard implements CanActivate {
       },
     });
 
-    // console.log(data);
+    console.log(!roles);
     // console.log(req.query);
 
     if (!roles) {
       return true;
     }
     if (!!data && roles.includes(data.role)) {
+      console.log('masok');
       return true;
     } else {
+      console.log('gagal');
       throw new HttpException("you're not allowed", HttpStatus.FORBIDDEN);
     }
     // return true;
