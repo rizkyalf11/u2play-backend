@@ -12,3 +12,33 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+enum AuthRole {
+  user
+  admin
+  super_admin
+  organizer
+}
+
+enum Provider {
+  google
+  credential
+}
+
+model User {
+  id       BigInt   @id @default(autoincrement())
+  clientId String? @map("client_id")
+  name     String
+  username String
+  email    String   @unique
+  password String?
+  role     AuthRole @default(user)
+  bio      String?  @db.Text
+  nik      String?
+  provider Provider @default(credential)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
