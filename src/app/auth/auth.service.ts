@@ -1,13 +1,18 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import BaseResponse from 'src/utils/baseresponse/baseresponse.class';
 import { LoginDto, RegisterDto } from './auth.dto';
 import { hash, compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { REQUEST } from '@nestjs/core';
 
 @Injectable()
 export class AuthService extends BaseResponse {
-  constructor(private prismaService: PrismaService, private jwtService : JwtService) {
+  constructor(
+    private prismaService: PrismaService,
+    private jwtService: JwtService,
+    @Inject(REQUEST) private req: any,
+  ) {
     super();
   }
   generateToken(payload: any, exp: string | number) {
@@ -28,7 +33,7 @@ export class AuthService extends BaseResponse {
         name: true,
         role: true,
         password: true,
-      }
+      },
     });
 
     if (!foundData) {
@@ -37,19 +42,17 @@ export class AuthService extends BaseResponse {
 
     const isCorrect = await compare(payload.password, foundData.password);
     (BigInt.prototype as any).toJSON = function () {
-        return Number(this);
-      };
+      return Number(this);
+    };
     if (isCorrect) {
       const { password, ...userData } = foundData;
 
       const accessToken = this.generateToken(userData, '7d');
 
-
       // console.table({
       //   access_token: accessToken,
       //   refresh_token: refreshToken,
       // });
-
 
       return this._success('login successful', {
         access_token: accessToken,
@@ -97,5 +100,28 @@ export class AuthService extends BaseResponse {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async getProfile() {
+    const id = this.req.user.id;
+    const data = await this.prismaService.user.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        bio: true,
+        nik: true,
+        role: true,
+        avatar: true
+      }
+    });
+
+    if (!data) throw new HttpException('user not found', HttpStatus.NOT_FOUND);
+
+    return this._success('success get profile', data);
   }
 }
