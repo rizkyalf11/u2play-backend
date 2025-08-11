@@ -12,7 +12,7 @@ export class ArticleService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateArticleDto) {
-    // 1. Cek apakah kategori ada
+    // 1. Cek kategori ada atau nggak
     const category = await this.prisma.category.findUnique({
       where: { id: data.category_id },
     });
@@ -21,18 +21,29 @@ export class ArticleService {
       throw new NotFoundException(`Category ID ${data.category_id} not found`);
     }
 
-    // 2. Validasi: hanya boleh pakai sub kategori (punya parent_id)
-    if (category.parent_id === null || category.parent_id === undefined) {
+    // 2. Cek apakah dia sub kategori (parent_id harus ada)
+    if (!category.parent_id) {
       throw new BadRequestException(
         `Category ID ${data.category_id} is a parent category, please use a sub-category`,
       );
     }
 
-    // 3. Simpan artikel jika lolos validasi
+    // 3. Kalau lolos, baru create
+    const { tag_ids, ...articleData } = data; // pisahkan tag_ids dari DTO
+
     const article = await this.prisma.articles.create({
-      data,
+      data: {
+        ...articleData,
+        article_tags: tag_ids
+          ? {
+              create: tag_ids.map((tagId) => ({
+                tag_id: tagId,
+              })),
+            }
+          : undefined,
+      },
       include: {
-        category: true, // opsional kalau mau return info kategori
+        article_tags: { include: { tag: true } },
       },
     });
 
@@ -68,29 +79,8 @@ export class ArticleService {
   }
 
   async update(id: number, data: UpdateArticleDto) {
-    // Pastikan artikel ada
     await this.findOne(id);
 
-    // Jika user mengirim category_id baru, validasi sub-kategori
-    if (data.category_id) {
-      const category = await this.prisma.category.findUnique({
-        where: { id: data.category_id },
-      });
-
-      if (!category) {
-        throw new NotFoundException(
-          `Category ID ${data.category_id} not found`,
-        );
-      }
-
-      if (category.parent_id === null || category.parent_id === undefined) {
-        throw new BadRequestException(
-          `Category ID ${data.category_id} is a parent category, please use a sub-category`,
-        );
-      }
-    }
-
-    // Pisahkan tag_ids untuk relasi many-to-many
     const { tag_ids, ...articleData } = data;
 
     const updated = await this.prisma.articles.update({
