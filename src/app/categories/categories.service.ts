@@ -7,14 +7,36 @@ export class CategoriesService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateCategoryDto) {
-    return this.prisma.category.create({ data });
+    // Kalau parent_id dikirim, cek apakah parent ada
+    if (data.parent_id) {
+      const parent = await this.prisma.category.findUnique({
+        where: { id: data.parent_id },
+      });
+      if (!parent) {
+        throw new NotFoundException(
+          `Parent category with ID ${data.parent_id} not found`,
+        );
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Category created successfully',
+      data: await this.prisma.category.create({
+        data: {
+          name: data.name,
+          slug: data.slug,
+          parent_id: data.parent_id ?? null, // kalau undefined → null
+        },
+      }),
+    };
   }
 
   async findAll() {
     return this.prisma.category.findMany({
       include: {
-        children: true,
-        parent: true,
+        // children: true,
+        // parent: true,
       },
     });
   }
@@ -23,8 +45,8 @@ export class CategoriesService {
     const category = await this.prisma.category.findUnique({
       where: { id },
       include: {
-        children: true,
-        parent: true,
+        // children: true,
+        // parent: true,
       },
     });
     if (!category) {

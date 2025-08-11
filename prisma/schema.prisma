@@ -31,7 +31,7 @@ enum Visibility {
 }
 
 model User {
-  id       BigInt   @id @default(autoincrement())
+  id       Int   @id @default(autoincrement())
   clientId String?  @map("client_id")
   name     String
   username String
@@ -44,13 +44,13 @@ model User {
 
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
-  Articles  Articles[]
+  // Articles  Articles[]
 
   @@map("users")
 }
 
 model Tag {
-  id         BigInt   @id @default(autoincrement())
+  id         Int   @id @default(autoincrement())
   name       String   @db.VarChar(255)
   slug       String   @db.VarChar(255)
   created_at DateTime @default(now())
@@ -63,28 +63,29 @@ model Tag {
 }
 
 model Category {
-  id         BigInt   @id @default(autoincrement())
-  name       String   @db.VarChar(255)
-  slug       String   @db.VarChar(255)
-  parent_id  BigInt? // <-- ini opsional
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  slug       String    @db.VarChar(255)
+  parent_id  Int?      
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
 
-  // Relations
-  articles Articles[]
+  // Relasi self-reference
   parent   Category?  @relation("CategoryHierarchy", fields: [parent_id], references: [id])
   children Category[] @relation("CategoryHierarchy")
+
+  articles Articles[]
 
   @@map("categories")
 }
 
 model Articles {
-  id           BigInt     @id @default(autoincrement())
-  author_id    BigInt     @map("author_id")
+  id           Int     @id @default(autoincrement())
+  author_id    Int?
   title        String     @db.VarChar(255)
   description  String     @db.VarChar(500)
   slug         String     @db.VarChar(255)
-  category_id  BigInt
+  category_id  Int
   content      String     @db.LongText
   visibility   Visibility @default(PRIVATE)
   published_at DateTime?
@@ -94,7 +95,7 @@ model Articles {
   updated_at   DateTime   @updatedAt
 
   // Relations
-  author       User         @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  // author       User         @relation(fields: [author_id], references: [id], onDelete: Cascade)
   category     Category     @relation(fields: [category_id], references: [id])
   article_tags ArticleTag[]
 
@@ -102,9 +103,9 @@ model Articles {
 }
 
 model ArticleTag {
-  id         BigInt   @id @default(autoincrement())
-  article_id BigInt
-  tag_id     BigInt
+  id         Int   @id @default(autoincrement())
+  article_id Int
+  tag_id     Int
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 

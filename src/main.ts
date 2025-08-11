@@ -11,7 +11,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth({
       type: 'apiKey',
-      in: "header",
+      in: 'header',
       name: 'Authorization',
     })
     .addTag('gaming')
@@ -19,7 +19,9 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
   await app.listen(process.env.APP_PORT!);
-  console.log('run at', process.env.APP_PORT!)
-  console.log('documentation at -> http:/localhost:'+ process.env.APP_PORT! + '/api');
+  console.log('run at', process.env.APP_PORT!);
+  console.log(
+    'documentation at -> http:/localhost:' + process.env.APP_PORT! + '/api',
+  );
 }
 bootstrap();
