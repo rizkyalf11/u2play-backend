@@ -64,3 +64,7 @@ export class RegisterDto extends PickType(AuthDTO, [
   'password',
   'username',
 ]) {}
+export class LoginDto extends PickType(AuthDTO, [
+  'email',
+  'password',
+]) {}

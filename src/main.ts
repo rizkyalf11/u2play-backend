@@ -13,7 +13,7 @@ async function bootstrap() {
       type: 'apiKey',
       in: 'header',
       name: 'Authorization',
-    })
+    },'token')
     .addTag('gaming')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);

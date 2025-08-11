@@ -31,8 +31,8 @@ enum Visibility {
 }
 
 model User {
-  id       Int   @id @default(autoincrement())
-  clientId String?  @map("client_id")
+  id       Int   @id @default(autoincrement()) @db.UnsignedInt
+  clientId String? @map("client_id")
   name     String
   username String
   email    String   @unique
@@ -41,6 +41,7 @@ model User {
   bio      String?  @db.Text
   nik      String?
   provider Provider @default(credential)
+  avatar  String?  
 
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
