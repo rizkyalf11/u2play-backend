@@ -9,11 +9,17 @@ async function bootstrap() {
     .setTitle('U2PLAY API')
     .setDescription('The cats API description')
     .setVersion('1.0')
+    .addBearerAuth({
+      type: 'apiKey',
+      in: "header",
+      name: 'Authorization',
+    })
     .addTag('gaming')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
   await app.listen(process.env.APP_PORT!);
   console.log('run at', process.env.APP_PORT!)
+  console.log('documentation at -> http:/localhost:'+ process.env.APP_PORT! + '/api');
 }
 bootstrap();
