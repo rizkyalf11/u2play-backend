@@ -30,6 +30,20 @@ enum Visibility {
   PUBLIC
 }
 
+enum MemberRoles {
+  captain
+  manager
+  coach
+  player
+}
+
+enum MemberStatus {
+  invited
+  joined
+  rejected
+  leaved
+}
+
 model User {
   id       Int      @id @default(autoincrement()) @db.UnsignedInt
   clientId String?  @map("client_id")
@@ -47,10 +61,11 @@ model User {
   updatedAt DateTime   @updatedAt @map("updated_at")
   Articles  Articles[]
   ResetPassword ResetPassword[]
-  notifications_sent     notifications[] @relation("NotificationSender")
-  notifications_received notifications[] @relation("NotificationRecipient")
+  notifications_sent     Notifications[] @relation("NotificationSender")
+  notifications_received Notifications[] @relation("NotificationRecipient")
 
   @@map("users")
+  TeamMembers TeamMembers[]
 }
 
 model ResetPassword {
@@ -144,7 +159,7 @@ model ArticleTag {
   @@map("article_tags")
 }
 
-model games {
+model Games {
   id         Int       @id @default(autoincrement()) @db.UnsignedInt
   name       String
   image      String
@@ -152,10 +167,11 @@ model games {
   created_at DateTime? @default(now())
   updated_at DateTime? @updatedAt
 
+  teams Teams[]
   @@map("games")
 }
 
-model notifications {
+model Notifications {
   id           Int       @id @default(autoincrement()) @db.UnsignedInt
   sender_id    Int?      @db.UnsignedInt
   recipient_id Int?      @db.UnsignedInt
@@ -170,7 +186,7 @@ model notifications {
   @@map("notifications")
 }
 
-model promotion_banners {
+model Promotion_banners {
   id         Int      @id @default(autoincrement()) @db.UnsignedInt
   image      String
   link_url   String?
@@ -178,4 +194,40 @@ model promotion_banners {
   updated_at DateTime? @updatedAt
 
   @@map("promotion_banners")
+}
+
+model Teams {
+  id Int @id @default(autoincrement()) @db.UnsignedInt
+  name String
+  game_id Int @db.UnsignedInt
+  image String
+  noTelp String @map("no_telp")
+  bio String? @db.Text
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+  game Games @relation(fields: [game_id], references: [id])
+
+  TeamMembers TeamMembers[]
+}
+
+model TeamMembers {
+  id Int @id @default(autoincrement()) @db.UnsignedInt
+  team_id Int @db.UnsignedInt
+  user_id Int @db.UnsignedInt
+  role MemberRoles @default(player)
+  in_game_id String?
+  in_game_name String?
+  status MemberStatus @default(invited)
+  invited_at DateTime? @default(now()) @map("invited_at")
+  joined_at DateTime? @map("joined_at")
+  rejected_at DateTime? @map("rejected_at")
+  leaved_at DateTime? @map("leaved_at")
+
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+
+  team Teams @relation(fields: [team_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
+
+  @@unique([team_id, user_id])
 }
