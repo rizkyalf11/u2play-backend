@@ -7,6 +7,7 @@ import { RoleGuard } from 'src/guard/role/role.guard';
 import { CreateUserDto, GetUserFilterDto } from './auth.dto';
 import { Pagination } from 'src/utils/decorators/pagination.decorator';
 import { ApiPaginationQuery } from 'src/utils/decorators/pagination.swagger';
+import { get } from 'http';
 
 @ApiBearerAuth('token')
 @UseGuards(JwtGuard, RoleGuard)
@@ -32,5 +33,11 @@ export class AuthSuperController {
     @Put('/:id')
     updateUser(@Param('id') id: number, @Body() payload: CreateUserDto) {
         return this.authSuperService.updateUser(+id, payload);
+    }
+
+    @Roles(['super_admin'])
+    @Get('/:id')
+    detailUser(@Param('id') id: number) {
+        return this.authSuperService.detailUser(+id);
     }
 }

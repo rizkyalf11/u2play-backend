@@ -59,7 +59,12 @@ export class AuthSuperService extends BaseResponse {
     });
     const count = await this.prismaService.user.count({where: filterQuery});
 
-    return this._pagination('Users retrieved successfully', data, count, +page, +pageSize);
+    const data2 = data.map((dt) => {
+      const { password, ...rest } = dt;
+      return rest;
+    })
+
+    return this._pagination('Users retrieved successfully', data2, count, +page, +pageSize);
   }
 
   async updateUser(id: number, payload: UpdateUserDto) {
@@ -90,5 +95,18 @@ export class AuthSuperService extends BaseResponse {
     }
 
     return this._success('User updated successfully');
+  }
+
+  async detailUser(id: number) {
+    const foundData = await this.prismaService.user.findUnique({
+      where: { id },
+    })
+
+    if (!foundData)
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    const { password, ...rest } = foundData;
+
+    return this._success('User details retrieved successfully', rest);
   }
 }
