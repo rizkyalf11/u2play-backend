@@ -1,6 +1,7 @@
 // src/app/articles/articles.dto.ts
 import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
 import { Visibility } from '@prisma/client';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
@@ -8,6 +9,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Min,
 } from 'class-validator';
 import { PageRequestDto } from 'src/utils/dto/page.dto';
 
@@ -69,6 +71,29 @@ export class findAllArticlesDto extends PageRequestDto {
   @IsOptional()
   @ApiPropertyOptional({ example: 'kata kunci pencarian' })
   keyword?: string;
+}
+
+export class ArticleDetailQueryDto {
+  @ApiPropertyOptional({ example: 1, description: 'Max popular articles' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  popularLimit?: number = 1;
+
+  @ApiPropertyOptional({ example: 1, description: 'Max latest articles' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  latestLimit?: number = 1;
+
+  @ApiPropertyOptional({ example: 1, description: 'Max recommended articles' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  recommendationLimit?: number = 1;
 }
 
 export class CreateArticleDto extends PickType(ArticleDTO, [

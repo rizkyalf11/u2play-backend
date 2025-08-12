@@ -1,5 +1,6 @@
-import { ApiProperty, PickType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
 import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { PageRequestDto } from 'src/utils/dto/page.dto';
 
 export class TagDTO {
   @IsInt()
@@ -20,3 +21,19 @@ export class TagDTO {
 
 export class CreateTagDto extends PickType(TagDTO, ['name', 'slug']) {}
 export class UpdateTagDto extends PickType(TagDTO, ['name', 'slug']) {}
+export class FindAllTagsDto extends PageRequestDto {
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({ example: 'Nama tag' })
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({ example: 'slug-tag' })
+  slug?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({ example: 'kata kunci pencarian' })
+  keyword?: string;
+}

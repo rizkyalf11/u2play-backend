@@ -1,10 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateCategoryDto, UpdateCategoryDto } from './categories.dto';
+import {
+  CreateCategoryDto,
+  FindAllCategoriesDto,
+  UpdateCategoryDto,
+} from './categories.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import BaseResponse from 'src/utils/baseresponse/baseresponse.class';
 
 @Injectable()
-export class CategoriesService {
-  constructor(private prisma: PrismaService) {}
+export class CategoriesService extends BaseResponse {
+  constructor(private prisma: PrismaService) {
+    super();
+  }
 
   async create(data: CreateCategoryDto) {
     // Kalau parent_id dikirim, cek apakah parent ada
@@ -32,13 +41,44 @@ export class CategoriesService {
     };
   }
 
-  async findAll() {
-    return this.prisma.category.findMany({
-      include: {
-        // children: true,
-        // parent: true,
-      },
-    });
+  async findAll(params: FindAllCategoriesDto) {
+    const { page, pageSize, name, keyword } = params;
+    const skip = (page - 1) * pageSize;
+
+    const where: any = {};
+
+    // Filter berdasarkan name
+    if (name) {
+      where.name = { contains: name, mode: 'insensitive' };
+    }
+
+    if (keyword) {
+      where.OR = [
+        { name: { contains: keyword, mode: 'insensitive' } },
+        { slug: { contains: keyword, mode: 'insensitive' } },
+      ];
+    }
+
+    const [categories, total] = await Promise.all([
+      this.prisma.category.findMany({
+        where,
+        skip,
+        take: Number(pageSize),
+        include: {
+          children: true,
+          parent: true,
+        },
+      }),
+      this.prisma.category.count({ where }),
+    ]);
+
+    return this._pagination(
+      'Categories fetched successfully',
+      categories,
+      total,
+      page,
+      pageSize,
+    );
   }
 
   async findOne(id: number) {

@@ -1,5 +1,6 @@
-import { ApiProperty, PickType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
 import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { PageRequestDto } from 'src/utils/dto/page.dto';
 
 export class CategoryDTO {
   @IsInt()
@@ -21,6 +22,18 @@ export class CategoryDTO {
   @IsOptional()
   @ApiProperty({ example: 2, description: 'Parent category ID (optional)' })
   parent_id?: number;
+}
+
+export class FindAllCategoriesDto extends PageRequestDto {
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({ example: 'Nama kategori' })
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({ example: 'kata kunci pencarian' })
+  keyword?: string;
 }
 
 export class CreateCategoryDto extends PickType(CategoryDTO, [

@@ -10,12 +10,15 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
+  ArticleDetailQueryDto,
   CreateArticleDto,
   findAllArticlesDto,
   UpdateArticleDto,
 } from './aritcle.dto';
 import { REQUEST } from '@nestjs/core';
 import BaseResponse from 'src/utils/baseresponse/baseresponse.class';
+import { format } from 'date-fns';
+import { id as idLocale } from 'date-fns/locale';
 
 @Injectable()
 export class ArticleService extends BaseResponse {
@@ -169,5 +172,99 @@ export class ArticleService extends BaseResponse {
     const deleted = await this.prisma.articles.delete({ where: { id } });
 
     return this._success('Article deleted successfully', { data: deleted });
+  }
+
+  async findOneAndIncrementView(
+    id: number,
+    ipAddress: string,
+    query: ArticleDetailQueryDto,
+  ) {
+    const { latestLimit, popularLimit, recommendationLimit } = query;
+
+    const article = await this.prisma.articles.findUnique({
+      where: { id },
+      include: {
+        category: { include: { parent: true } },
+        article_tags: { include: { tag: true } },
+        author: true,
+      },
+    });
+
+    if (!article) {
+      throw new NotFoundException(`Article with ID ${id} not found`);
+    }
+
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const recentView = await this.prisma.articleViews.findFirst({
+      where: {
+        article_id: id,
+        ip_address: ipAddress,
+        viewed_at: { gte: twentyFourHoursAgo },
+      },
+    });
+
+    if (!recentView) {
+      await this.prisma.articleViews.create({
+        data: { article_id: id, ip_address: ipAddress },
+      });
+
+      await this.prisma.articles.update({
+        where: { id },
+        data: { view_count: { increment: 1 } },
+      });
+
+      article.view_count += 1;
+    }
+
+    const [popularArticles, latestArticles, recommendations] =
+      await Promise.all([
+        this.prisma.articles.findMany({
+          orderBy: { view_count: 'desc' },
+          take: Number(popularLimit),
+          include: {
+            author: true,
+            category: { include: { parent: true } },
+          },
+        }),
+        this.prisma.articles.findMany({
+          orderBy: { created_at: 'desc' },
+          take: Number(latestLimit),
+          include: {
+            author: true,
+            category: { include: { parent: true } },
+          },
+        }),
+        this.prisma.articles.findMany({
+          where: { category_id: article.category_id, id: { not: id } },
+          orderBy: { created_at: 'desc' },
+          take: Number(recommendationLimit),
+          include: {
+            author: true,
+            category: { include: { parent: true } },
+          },
+        }),
+      ]);
+
+    const formatArticle = (a) => ({
+      id: a.id,
+      title: a.title,
+      description: a.description,
+      author_name: a.author?.name || null,
+      created_at: format(new Date(a.created_at), 'EEE, dd MMMM yyyy', {
+        locale: idLocale,
+      }),
+      sub_category: a.category?.parent?.name || null,
+    });
+
+    return {
+      message: 'Article fetched successfully',
+      data: {
+        article: article,
+        popular: popularArticles.map(formatArticle),
+        latest: latestArticles.map(formatArticle),
+        recommendations: recommendations.map(formatArticle),
+      },
+    };
   }
 }
