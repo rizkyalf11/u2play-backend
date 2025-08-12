@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { AuthSuperService } from './auth-super.service';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Roles } from 'src/guard/role/roles.decorator';
 import { JwtGuard } from 'src/guard/auth/auth.guard';
 import { RoleGuard } from 'src/guard/role/role.guard';
-import { CreateUserDto } from './auth.dto';
+import { CreateUserDto, GetUserFilterDto } from './auth.dto';
+import { Pagination } from 'src/utils/decorators/pagination.decorator';
+import { ApiPaginationQuery } from 'src/utils/decorators/pagination.swagger';
 
 @ApiBearerAuth('token')
 @UseGuards(JwtGuard, RoleGuard)
@@ -19,8 +21,16 @@ export class AuthSuperController {
     }
 
     @Roles(['super_admin'])
+    @ApiPaginationQuery()
+    @ApiQuery({name : 'keyword', required: false, example: 'keyword', description: 'Filter by username, name or email'})
     @Get('/')
-    getUsers() {
-        return this.authSuperService.getUsers();
+    getUsers(@Pagination() query: GetUserFilterDto) {
+        return this.authSuperService.getUsers(query);
+    }
+
+    @Roles(['super_admin'])
+    @Put('/:id')
+    updateUser(@Param('id') id: number, @Body() payload: CreateUserDto) {
+        return this.authSuperService.updateUser(+id, payload);
     }
 }

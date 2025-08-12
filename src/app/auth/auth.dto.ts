@@ -1,4 +1,4 @@
-import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType, PickType } from '@nestjs/swagger';
 import { AuthRole, Provider } from '@prisma/client';
 import {
   IsEmail,
@@ -9,6 +9,7 @@ import {
   IsString,
   Length,
 } from 'class-validator';
+import { PageRequestDto } from 'src/utils/dto/page.dto';
 
 export class AuthDTO {
   @IsInt()
@@ -68,6 +69,20 @@ export class LoginDto extends PickType(AuthDTO, [
   'email',
   'password',
 ]) {}
+
+// auth super DTO
 export class CreateUserDto extends OmitType(AuthDTO, [
     'id'
 ]) {}
+export class UpdateUserDto extends OmitType(AuthDTO, [
+    'id'
+]) {}
+
+export class GetUserFilterDto extends PageRequestDto {
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({ example: 'keyword', description: 'Filter by username' })
+  keyword?: string;
+
+  
+}

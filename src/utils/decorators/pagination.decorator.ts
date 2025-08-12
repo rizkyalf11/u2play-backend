@@ -18,8 +18,8 @@ export const Pagination = createParamDecorator(
 
     request.query.limit =
       (Number(request.query.page) - 1) * Number(request.query.pageSize);
-    request.query.pageSize = Number(request.query.pageSize);
-    request.query.page = Number(request.query.page);
+    request.query.pageSize = +request.query.pageSize;
+    request.query.page = +request.query.page;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     console.log('request', request.query);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
