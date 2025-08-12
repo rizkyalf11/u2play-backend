@@ -9,6 +9,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { PageRequestDto } from 'src/utils/dto/page.dto';
 
 export class ArticleDTO {
   @IsInt()
@@ -56,6 +57,18 @@ export class ArticleDTO {
   @IsInt({ each: true })
   @ApiProperty({ example: [1, 2], description: 'Array of Tag IDs' })
   tag_ids?: number[];
+}
+
+export class findAllArticlesDto extends PageRequestDto {
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'Judul artikel' })
+  title?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'kata kunci pencarian' })
+  keyword?: string;
 }
 
 export class CreateArticleDto extends PickType(ArticleDTO, [

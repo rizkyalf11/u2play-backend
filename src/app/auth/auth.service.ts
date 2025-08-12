@@ -116,8 +116,8 @@ export class AuthService extends BaseResponse {
         bio: true,
         nik: true,
         role: true,
-        avatar: true
-      }
+        // avatar: true,
+      },
     });
 
     if (!data) throw new HttpException('user not found', HttpStatus.NOT_FOUND);
