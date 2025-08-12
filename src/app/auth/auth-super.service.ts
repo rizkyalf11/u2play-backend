@@ -109,4 +109,16 @@ export class AuthSuperService extends BaseResponse {
 
     return this._success('User details retrieved successfully', rest);
   }
+  async deleteUser(id: number) {
+    const foundData = await this.prismaService.user.findUnique({
+      where: { id },
+    })
+
+    if (!foundData)
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    await this.prismaService.user.delete({where: foundData})
+
+    return this._success('User deleted successfully');
+  }
 }

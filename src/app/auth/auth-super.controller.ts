@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { AuthSuperService } from './auth-super.service';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Roles } from 'src/guard/role/roles.decorator';
@@ -40,4 +40,12 @@ export class AuthSuperController {
     detailUser(@Param('id') id: number) {
         return this.authSuperService.detailUser(+id);
     }
+
+    @Roles(['super_admin'])
+    @Delete('/:id')
+    deleteUser(@Param('id') id: number) {
+        return this.authSuperService.deleteUser(+id);
+    }
+
+
 }
