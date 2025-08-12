@@ -21,7 +21,7 @@ async function bootstrap() {
   await app.listen(process.env.APP_PORT!);
   console.log('run at', process.env.APP_PORT!);
   console.log(
-    'documentation at -> http:/localhost:' + process.env.APP_PORT! + '/api',
+    'documentation at -> http://localhost:' + process.env.APP_PORT! + '/api',
   );
 }
 bootstrap();
