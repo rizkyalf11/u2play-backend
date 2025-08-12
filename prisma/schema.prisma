@@ -43,11 +43,23 @@ model User {
   provider Provider @default(credential)
   avatar   String?
 
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
-  Articles  Articles[]
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  Articles      Articles[]
+  ResetPassword ResetPassword[]
 
   @@map("users")
+}
+
+model ResetPassword {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  userId    Int      @map("user_id") @db.UnsignedInt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  token     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("reset_password")
 }
 
 model Tag {

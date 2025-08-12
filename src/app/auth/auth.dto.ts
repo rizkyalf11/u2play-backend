@@ -69,6 +69,12 @@ export class LoginDto extends PickType(AuthDTO, [
   'email',
   'password',
 ]) {}
+export class ForgetPasswordDto extends PickType(AuthDTO, [
+  'email',
+]) {}
+export class ResetPasswordDto extends PickType(AuthDTO, [
+  'password',
+]) {}
 
 // auth super DTO
 export class CreateUserDto extends OmitType(AuthDTO, [

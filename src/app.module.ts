@@ -8,6 +8,8 @@ import { CategoriesModule } from './app/categories/categories.module';
 import { ArticleModule } from './app/article/article.module';
 import { TagsModule } from './app/tags/tags.module';
 import { UploadController } from './app/upload/upload.controller';
+import { EmailModule } from './app/email/email.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -19,6 +21,15 @@ import { UploadController } from './app/upload/upload.controller';
     CategoriesModule,
     ArticleModule,
     TagsModule,
+    EmailModule,
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60,
+          limit: 10,
+        },
+      ],
+    }),
   ],
   controllers: [AppController, UploadController],
   providers: [AppService],

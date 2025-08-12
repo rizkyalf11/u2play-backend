@@ -1,16 +1,19 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import BaseResponse from 'src/utils/baseresponse/baseresponse.class';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { ForgetPasswordDto, LoginDto, RegisterDto, ResetPasswordDto } from './auth.dto';
 import { hash, compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { REQUEST } from '@nestjs/core';
+import { randomBytes } from 'crypto';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService extends BaseResponse {
   constructor(
     private prismaService: PrismaService,
     private jwtService: JwtService,
+    private mailService: EmailService,
     @Inject(REQUEST) private req: any,
   ) {
     super();
@@ -123,5 +126,77 @@ export class AuthService extends BaseResponse {
     if (!data) throw new HttpException('user not found', HttpStatus.NOT_FOUND);
 
     return this._success('success get profile', data);
+  }
+
+  async forgetPassword(payload: ForgetPasswordDto) {
+    const data = await this.prismaService.user.findUnique({
+      where: {
+        email: payload.email,
+      },
+    });
+
+    if (!data) {
+      throw new HttpException('Email not registered', HttpStatus.NOT_FOUND);
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const link = `http://localhost:${process.env.APP_PORT}/auth/reset-password/${data.id}/${token}`;
+
+    try {
+      await this.mailService.sendEmail({
+        email: data.email,
+        username: data.username,
+        link: link,
+      });
+
+      await this.prismaService.resetPassword.create({
+        data: {
+          userId: data.id,
+          token: token,
+        }
+      })
+
+      return this._success('Silahkan Cek Email')
+    } catch (error) {
+      throw new HttpException(
+        'Failed to send email',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async resetPassword(userID: number, token: string, payload: ResetPasswordDto) {
+    const data = await this.prismaService.resetPassword.findFirst({
+      where: {
+        userId: userID,
+        token: token,
+      }
+    })
+
+    if (!data) {
+      throw new HttpException('Invalid token', HttpStatus.NOT_FOUND);
+    }
+
+    try {
+      const password = await hash(payload.password, 10);
+      await this.prismaService.user.update({
+        where: {
+          id: data.userId,
+        },
+        data: {
+          password: password,
+        }
+      })
+
+      await this.prismaService.resetPassword.delete({
+        where: data
+      })
+      return this._success('Change password succeccful!')
+    } catch (error) {
+      throw new HttpException(
+        'Failed to send email',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
