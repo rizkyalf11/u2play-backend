@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { CategoriesModule } from './app/categories/categories.module';
 import { ArticleModule } from './app/article/article.module';
 import { TagsModule } from './app/tags/tags.module';
+import { UploadController } from './app/upload/upload.controller';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { TagsModule } from './app/tags/tags.module';
     ArticleModule,
     TagsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, UploadController],
   providers: [AppService],
 })
 export class AppModule {}
