@@ -1,5 +1,5 @@
 // src/app/articles/articles.dto.ts
-import { ApiProperty, PickType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
 import { Visibility } from '@prisma/client';
 import {
   IsArray,
@@ -62,12 +62,12 @@ export class ArticleDTO {
 export class findAllArticlesDto extends PageRequestDto {
   @IsString()
   @IsOptional()
-  @ApiProperty({ example: 'Judul artikel' })
+  @ApiPropertyOptional({ example: 'Judul artikel' })
   title?: string;
 
   @IsString()
   @IsOptional()
-  @ApiProperty({ example: 'kata kunci pencarian' })
+  @ApiPropertyOptional({ example: 'kata kunci pencarian' })
   keyword?: string;
 }
 

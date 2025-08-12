@@ -1,4 +1,5 @@
-import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+/* eslint-disable prettier/prettier */
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { ArticleService } from './article.service';
 import {
   Controller,
@@ -10,7 +11,7 @@ import {
   Body,
   ParseIntPipe,
   UseGuards,
-  Query,
+  
 } from '@nestjs/common';
 import {
   CreateArticleDto,
@@ -20,8 +21,11 @@ import {
 import { RoleGuard } from 'src/guard/role/role.guard';
 import { JwtGuard } from 'src/guard/auth/auth.guard';
 import { Pagination } from 'src/utils/decorators/pagination.decorator';
+import { ApiPaginationQuery } from 'src/utils/decorators/pagination.swagger';
+// import { Pagination } from 'src/utils/decorators/pagination.decorator';
 
 @UseGuards(JwtGuard, RoleGuard)
+@ApiBearerAuth('token')
 @Controller('article')
 export class ArticleController {
   constructor(private readonly articlesService: ArticleService) {}
@@ -34,15 +38,15 @@ export class ArticleController {
   }
 
   @Get()
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'pageSize', required: false, example: 20 })
+
+  @ApiPaginationQuery()
   @ApiQuery({ name: 'title', required: false, example: 'Judul artikel' })
   @ApiQuery({
     name: 'keyword',
     required: false,
     example: 'kata kunci pencarian',
   })
-  async findAll(@Query() query: findAllArticlesDto) {
+  async findAll(@Pagination() query: findAllArticlesDto) {
     return this.articlesService.findAll(query);
   }
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // src/app/articles/articles.service.ts
@@ -42,6 +43,23 @@ export class ArticleService extends BaseResponse {
 
     const { tag_ids, ...articleData } = data;
 
+    // Validasi tag_ids
+    if (tag_ids && tag_ids.length > 0) {
+      const existingTags = await this.prisma.tag.findMany({
+        where: { id: { in: tag_ids } },
+        select: { id: true },
+      });
+
+      const existingTagIds = existingTags.map((tag) => tag.id);
+      const invalidTags = tag_ids.filter((id) => !existingTagIds.includes(id));
+
+      if (invalidTags.length > 0) {
+        throw new NotFoundException(
+          `Tag(s) with ID ${invalidTags.join(', ')} not found`,
+        );
+      }
+    }
+
     const article = await this.prisma.articles.create({
       data: {
         ...articleData,
@@ -71,15 +89,15 @@ export class ArticleService extends BaseResponse {
 
     // Filter berdasarkan title
     if (title) {
-      where.title = { contains: title, mode: 'insensitive' };
+      where.title = { contains: title };
     }
 
     // Filter berdasarkan keyword (di title, description, atau content)
     if (keyword) {
       where.OR = [
-        { title: { contains: keyword, mode: 'insensitive' } },
-        { description: { contains: keyword, mode: 'insensitive' } },
-        { content: { contains: keyword, mode: 'insensitive' } },
+        { title: { contains: keyword } },
+        { description: { contains: keyword } },
+        { content: { contains: keyword } },
       ];
     }
 
@@ -87,12 +105,11 @@ export class ArticleService extends BaseResponse {
       this.prisma.articles.findMany({
         where,
         skip,
-        take: pageSize,
+        take: +pageSize,
         include: {
           category: true,
           article_tags: { include: { tag: true } },
         },
-        orderBy: { created_at: 'desc' },
       }),
       this.prisma.articles.count({ where }),
     ]);
