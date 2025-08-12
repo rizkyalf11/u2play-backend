@@ -65,7 +65,7 @@ model ResetPassword {
 }
 
 model Tag {
-  id         Int      @id @default(autoincrement())
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
   name       String   @db.VarChar(255)
   slug       String   @db.VarChar(255)
   created_at DateTime @default(now())
@@ -78,10 +78,10 @@ model Tag {
 }
 
 model Category {
-  id         Int      @id @default(autoincrement())
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
   name       String   @db.VarChar(255)
   slug       String   @db.VarChar(255)
-  parent_id  Int?
+  parent_id  Int? @db.UnsignedInt
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -95,12 +95,12 @@ model Category {
 }
 
 model Articles {
-  id           Int        @id @default(autoincrement())
+  id           Int        @id @default(autoincrement()) @db.UnsignedInt
   author_id    Int        @db.UnsignedInt
   title        String     @db.VarChar(255)
   description  String     @db.VarChar(500)
   slug         String     @db.VarChar(255)
-  category_id  Int
+  category_id  Int @db.UnsignedInt
   content      String     @db.LongText
   visibility   Visibility @default(PRIVATE)
   published_at DateTime?
@@ -119,19 +119,20 @@ model Articles {
 }
 
 model ArticleViews {
-  id         Int      @id @default(autoincrement())
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
   article    Articles @relation(fields: [article_id], references: [id])
-  article_id Int
+  article_id Int @db.UnsignedInt
   ip_address String
   viewed_at  DateTime @default(now())
 
   @@index([article_id, ip_address])
+  @@map("article_views")
 }
 
 model ArticleTag {
-  id         Int      @id @default(autoincrement())
-  article_id Int
-  tag_id     Int
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  article_id Int @db.UnsignedInt
+  tag_id     Int @db.UnsignedInt
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -144,16 +145,18 @@ model ArticleTag {
 }
 
 model games {
-  id         Int       @id @default(autoincrement())
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
   name       String
   image      String
   banner     String
   created_at DateTime? @default(now())
   updated_at DateTime? @updatedAt
+
+  @@map("games")
 }
 
 model notifications {
-  id           Int       @id @default(autoincrement())
+  id           Int       @id @default(autoincrement()) @db.UnsignedInt
   sender_id    Int?      @db.UnsignedInt
   recipient_id Int?      @db.UnsignedInt
   content      String
@@ -163,6 +166,8 @@ model notifications {
 
   sender    User? @relation("NotificationSender", fields: [sender_id], references: [id])
   recipient User? @relation("NotificationRecipient", fields: [recipient_id], references: [id])
+
+  @@map("notifications")
 }
 
 model promotion_banners {
@@ -171,4 +176,6 @@ model promotion_banners {
   link_url   String?
   created_at DateTime? @default(now())
   updated_at DateTime? @updatedAt
+
+  @@map("promotion_banners")
 }
