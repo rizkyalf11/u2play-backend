@@ -43,10 +43,12 @@ model User {
   provider Provider @default(credential)
   avatar   String?
 
-  createdAt     DateTime        @default(now()) @map("created_at")
-  updatedAt     DateTime        @updatedAt @map("updated_at")
-  Articles      Articles[]
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  Articles  Articles[]
   ResetPassword ResetPassword[]
+  notifications_sent     notifications[] @relation("NotificationSender")
+  notifications_received notifications[] @relation("NotificationRecipient")
 
   @@map("users")
 }
@@ -108,11 +110,22 @@ model Articles {
   updated_at   DateTime   @updatedAt
 
   // Relations
-  author       User         @relation(fields: [author_id], references: [id], onDelete: Cascade)
-  category     Category     @relation(fields: [category_id], references: [id])
+  author       User           @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  category     Category       @relation(fields: [category_id], references: [id])
   article_tags ArticleTag[]
+  ArticleViews ArticleViews[]
 
   @@map("articles")
+}
+
+model ArticleViews {
+  id         Int      @id @default(autoincrement())
+  article    Articles @relation(fields: [article_id], references: [id])
+  article_id Int
+  ip_address String
+  viewed_at  DateTime @default(now())
+
+  @@index([article_id, ip_address])
 }
 
 model ArticleTag {
@@ -128,4 +141,34 @@ model ArticleTag {
 
   @@unique([article_id, tag_id])
   @@map("article_tags")
+}
+
+model games {
+  id         Int       @id @default(autoincrement())
+  name       String
+  image      String
+  banner     String
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+}
+
+model notifications {
+  id           Int       @id @default(autoincrement())
+  sender_id    Int?      @db.UnsignedInt
+  recipient_id Int?      @db.UnsignedInt
+  content      String
+  is_read      Boolean?  @default(false)
+  link         String
+  created_at   DateTime? @default(now())
+
+  sender    User? @relation("NotificationSender", fields: [sender_id], references: [id])
+  recipient User? @relation("NotificationRecipient", fields: [recipient_id], references: [id])
+}
+
+model promotion_banners {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  image      String
+  link_url   String?
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
 }

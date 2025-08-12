@@ -1,4 +1,9 @@
-import { CreateCategoryDto, UpdateCategoryDto } from './categories.dto';
+import { ApiPaginationQuery } from 'src/utils/decorators/pagination.swagger';
+import {
+  CreateCategoryDto,
+  FindAllCategoriesDto,
+  UpdateCategoryDto,
+} from './categories.dto';
 import { CategoriesService } from './categories.service';
 import {
   Body,
@@ -9,8 +14,15 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { Pagination } from 'src/utils/decorators/pagination.decorator';
+import { JwtGuard } from 'src/guard/auth/auth.guard';
+import { RoleGuard } from 'src/guard/role/role.guard';
 
+@UseGuards(JwtGuard, RoleGuard)
+@ApiBearerAuth('token')
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoryService: CategoriesService) {}
@@ -26,13 +38,15 @@ export class CategoriesController {
   }
 
   @Get()
-  async findAll() {
-    const data = await this.categoryService.findAll();
-    return {
-      success: true,
-      message: 'Categories retrieved successfully',
-      data,
-    };
+  @ApiPaginationQuery()
+  @ApiQuery({ name: 'name', required: false, example: 'Nama kategori' })
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    example: 'kata kunci pencarian',
+  })
+  async findAll(@Pagination() query: FindAllCategoriesDto) {
+    return this.categoryService.findAll(query);
   }
 
   @Get(':id')

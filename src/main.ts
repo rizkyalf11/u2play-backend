@@ -12,18 +12,22 @@ async function bootstrap() {
     .setTitle('U2PLAY API')
     .setDescription('The cats API description')
     .setVersion('1.0')
-    .addBearerAuth({
-      type: 'apiKey',
-      in: 'header',
-      name: 'Authorization',
-    },'token')
+    .addBearerAuth(
+      {
+        type: 'apiKey',
+        in: 'header',
+        name: 'Authorization',
+      },
+      'token',
+    )
     .addTag('gaming')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
-
+  app.set('trust proxy', true);
   app.useGlobalPipes(
     new ValidationPipe({
+      transform: true,
       whitelist: true,
     }),
   );

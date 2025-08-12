@@ -7,11 +7,18 @@ import {
   Patch,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { TagsService } from './tags.service';
-import { CreateTagDto, UpdateTagDto } from './tags.dto';
+import { CreateTagDto, FindAllTagsDto, UpdateTagDto } from './tags.dto';
+import { ApiPaginationQuery } from 'src/utils/decorators/pagination.swagger';
+import { Pagination } from 'src/utils/decorators/pagination.decorator';
+import { JwtGuard } from 'src/guard/auth/auth.guard';
+import { RoleGuard } from 'src/guard/role/role.guard';
 
+@UseGuards(JwtGuard, RoleGuard)
+@ApiBearerAuth('token')
 @ApiTags('Tags')
 @Controller('tags')
 export class TagsController {
@@ -23,8 +30,16 @@ export class TagsController {
   }
 
   @Get()
-  findAll() {
-    return this.tagsService.findAll();
+  @ApiPaginationQuery()
+  @ApiQuery({ name: 'name', required: false, example: 'Nama tag' })
+  @ApiQuery({ name: 'slug', required: false, example: 'slug-tag' })
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    example: 'kata kunci pencarian',
+  })
+  async findAll(@Pagination() query: FindAllTagsDto) {
+    return this.tagsService.findAll(query);
   }
 
   @Get(':id')

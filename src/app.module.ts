@@ -8,6 +8,9 @@ import { CategoriesModule } from './app/categories/categories.module';
 import { ArticleModule } from './app/article/article.module';
 import { TagsModule } from './app/tags/tags.module';
 import { UploadController } from './app/upload/upload.controller';
+import { GamesModule } from './app/games/games.module';
+import { PromotionBannersModule } from './app/promotion-banners/promotion-banners.module';
+import { NotificationsModule } from './app/notifications/notifications.module';
 import { EmailModule } from './app/email/email.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 
@@ -21,6 +24,9 @@ import { ThrottlerModule } from '@nestjs/throttler';
     CategoriesModule,
     ArticleModule,
     TagsModule,
+    GamesModule,
+    PromotionBannersModule,
+    NotificationsModule,
     EmailModule,
     ThrottlerModule.forRoot({
       throttlers: [
