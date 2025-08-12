@@ -1,4 +1,4 @@
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { ArticleService } from './article.service';
 import {
   Controller,
@@ -9,9 +9,19 @@ import {
   Param,
   Body,
   ParseIntPipe,
+  UseGuards,
+  Query,
 } from '@nestjs/common';
-import { CreateArticleDto, UpdateArticleDto } from './aritcle.dto';
+import {
+  CreateArticleDto,
+  findAllArticlesDto,
+  UpdateArticleDto,
+} from './aritcle.dto';
+import { RoleGuard } from 'src/guard/role/role.guard';
+import { JwtGuard } from 'src/guard/auth/auth.guard';
+import { Pagination } from 'src/utils/decorators/pagination.decorator';
 
+@UseGuards(JwtGuard, RoleGuard)
 @Controller('article')
 export class ArticleController {
   constructor(private readonly articlesService: ArticleService) {}
@@ -24,9 +34,16 @@ export class ArticleController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all articles' })
-  async findAll() {
-    return this.articlesService.findAll();
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'pageSize', required: false, example: 20 })
+  @ApiQuery({ name: 'title', required: false, example: 'Judul artikel' })
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    example: 'kata kunci pencarian',
+  })
+  async findAll(@Query() query: findAllArticlesDto) {
+    return this.articlesService.findAll(query);
   }
 
   @Get(':id')
