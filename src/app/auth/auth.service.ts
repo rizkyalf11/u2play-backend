@@ -1,7 +1,12 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import BaseResponse from 'src/utils/baseresponse/baseresponse.class';
-import { ForgetPasswordDto, LoginDto, RegisterDto, ResetPasswordDto } from './auth.dto';
+import {
+  ForgetPasswordDto,
+  LoginDto,
+  RegisterDto,
+  ResetPasswordDto,
+} from './auth.dto';
 import { hash, compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { REQUEST } from '@nestjs/core';
@@ -153,10 +158,10 @@ export class AuthService extends BaseResponse {
         data: {
           userId: data.id,
           token: token,
-        }
-      })
+        },
+      });
 
-      return this._success('Silahkan Cek Email')
+      return this._success('Silahkan Cek Email');
     } catch (error) {
       throw new HttpException(
         'Failed to send email',
@@ -165,13 +170,17 @@ export class AuthService extends BaseResponse {
     }
   }
 
-  async resetPassword(userID: number, token: string, payload: ResetPasswordDto) {
+  async resetPassword(
+    userID: number,
+    token: string,
+    payload: ResetPasswordDto,
+  ) {
     const data = await this.prismaService.resetPassword.findFirst({
       where: {
         userId: userID,
         token: token,
-      }
-    })
+      },
+    });
 
     if (!data) {
       throw new HttpException('Invalid token', HttpStatus.NOT_FOUND);
@@ -185,13 +194,13 @@ export class AuthService extends BaseResponse {
         },
         data: {
           password: password,
-        }
-      })
+        },
+      });
 
       await this.prismaService.resetPassword.delete({
-        where: data
-      })
-      return this._success('Change password succeccful!')
+        where: data,
+      });
+      return this._success('Change password succeccful!');
     } catch (error) {
       throw new HttpException(
         'Failed to send email',
