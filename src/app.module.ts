@@ -13,6 +13,7 @@ import { PromotionBannersModule } from './app/promotion-banners/promotion-banner
 import { NotificationsModule } from './app/notifications/notifications.module';
 import { EmailModule } from './app/email/email.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { TeamModule } from './app/team/team.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
         },
       ],
     }),
+    TeamModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService],

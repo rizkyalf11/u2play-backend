@@ -120,12 +120,38 @@ export class AuthService extends BaseResponse {
         nik: true,
         role: true,
         // avatar: true,
+        TeamMembers: {
+          select: {
+            id: true,
+            role: true,
+            status: true,
+            team: {
+              select: {
+                id: true,
+                name: true,
+                image: true
+              }
+            }
+          }
+        }
       },
+
     });
+
+    const currentTeam = await this.prismaService.teams.findFirst({
+      where: {
+        TeamMembers: {
+          some: {
+            user_id: this.req.user.id,
+            status: 'joined'
+          }
+        }
+      }
+    })
 
     if (!data) throw new HttpException('user not found', HttpStatus.NOT_FOUND);
 
-    return this._success('success get profile', data);
+    return this._success('success get profile', {...data, currentTeam});
   }
 
   async forgetPassword(payload: ForgetPasswordDto) {
