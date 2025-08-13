@@ -43,7 +43,7 @@ export class AuthService extends BaseResponse {
       throw new HttpException('Email not registered', HttpStatus.NOT_FOUND);
     }
 
-    const isCorrect = await compare(payload.password, foundData.password);
+    const isCorrect = await compare(payload.password, foundData?.password);
     (BigInt.prototype as any).toJSON = function () {
       return Number(this);
     };
