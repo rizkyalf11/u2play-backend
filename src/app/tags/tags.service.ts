@@ -78,33 +78,6 @@ export class TagsService extends BaseResponse {
     );
   }
 
-  async findOneAndIncrementView(id: number) {
-    const article = await this.prisma.articles.findUnique({
-      where: { id },
-      include: {
-        category: true,
-        article_tags: { include: { tag: true } },
-      },
-    });
-
-    if (!article) {
-      throw new NotFoundException(`Article with ID ${id} not found`);
-    }
-
-    // Increment view_count
-    await this.prisma.articles.update({
-      where: { id },
-      data: {
-        view_count: { increment: 1 },
-      },
-    });
-
-    return {
-      message: 'Article fetched successfully',
-      data: { ...article, view_count: article.view_count + 1 },
-    };
-  }
-
   async findOne(id: number) {
     const tag = await this.prisma.tag.findUnique({
       where: { id },
@@ -115,7 +88,7 @@ export class TagsService extends BaseResponse {
     if (!tag) {
       throw new NotFoundException(`Tag with ID ${id} not found`);
     }
-    return tag;
+    return this._success('ok berhasil', tag);
   }
 
   async update(id: number, data: UpdateTagDto) {
@@ -124,19 +97,12 @@ export class TagsService extends BaseResponse {
       where: { id },
       data,
     });
-    return {
-      success: true,
-      message: 'Tag updated successfully',
-      data: updated,
-    };
+    return this._success('ok berhasil', updated);
   }
 
   async remove(id: number) {
     await this.findOne(id); // cek dulu
     await this.prisma.tag.delete({ where: { id } });
-    return {
-      success: true,
-      message: 'Tag deleted successfully',
-    };
+    return this._success('ok berhasil dihapus');
   }
 }
