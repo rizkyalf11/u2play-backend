@@ -21,6 +21,7 @@ import { ApiPaginationQuery } from 'src/utils/decorators/pagination.swagger';
 import { Pagination } from 'src/utils/decorators/pagination.decorator';
 import { JwtGuard } from 'src/guard/auth/auth.guard';
 import { RoleGuard } from 'src/guard/role/role.guard';
+import { Roles } from 'src/guard/role/roles.decorator';
 
 // @UseGuards(JwtGuard, RoleGuard)
 // @ApiBearerAuth('token')
@@ -29,6 +30,9 @@ import { RoleGuard } from 'src/guard/role/role.guard';
 export class PromotionBannersController {
   constructor(private readonly bannersService: PromotionBannersService) {}
 
+  @UseGuards(JwtGuard, RoleGuard)
+  @Roles(['super_admin'])
+  @ApiBearerAuth('token')
   @Post()
   create(@Body() data: CreatePromotionBannerDto) {
     return this.bannersService.create(data);
@@ -45,6 +49,9 @@ export class PromotionBannersController {
     return this.bannersService.findOne(id);
   }
 
+  @UseGuards(JwtGuard, RoleGuard)
+  @Roles(['super_admin'])
+  @ApiBearerAuth('token')
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -53,6 +60,9 @@ export class PromotionBannersController {
     return this.bannersService.update(id, data);
   }
 
+  @UseGuards(JwtGuard, RoleGuard)
+  @Roles(['super_admin'])
+  @ApiBearerAuth('token')
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.bannersService.remove(id);

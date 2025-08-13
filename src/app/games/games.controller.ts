@@ -17,14 +17,16 @@ import { ApiPaginationQuery } from 'src/utils/decorators/pagination.swagger';
 import { Pagination } from 'src/utils/decorators/pagination.decorator';
 import { JwtGuard } from 'src/guard/auth/auth.guard';
 import { RoleGuard } from 'src/guard/role/role.guard';
+import { Roles } from 'src/guard/role/roles.decorator';
 
-// @UseGuards(JwtGuard, RoleGuard)
-// @ApiBearerAuth('token')
 @ApiTags('Games')
 @Controller('games')
 export class GamesController {
   constructor(private readonly gamesService: GamesService) {}
 
+  @UseGuards(JwtGuard, RoleGuard)
+  @Roles(['super_admin'])
+  @ApiBearerAuth('token')
   @Post()
   create(@Body() data: CreateGameDto) {
     return this.gamesService.create(data);
@@ -47,11 +49,17 @@ export class GamesController {
     return this.gamesService.findOne(id);
   }
 
+  @UseGuards(JwtGuard, RoleGuard)
+  @Roles(['super_admin'])
+  @ApiBearerAuth('token')
   @Patch(':id')
   update(@Param('id', ParseIntPipe) id: number, @Body() data: UpdateGameDto) {
     return this.gamesService.update(id, data);
   }
 
+  @UseGuards(JwtGuard, RoleGuard)
+  @Roles(['super_admin'])
+  @ApiBearerAuth('token')
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.gamesService.remove(id);
