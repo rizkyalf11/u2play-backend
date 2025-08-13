@@ -14,6 +14,7 @@ import { NotificationsModule } from './app/notifications/notifications.module';
 import { EmailModule } from './app/email/email.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TeamModule } from './app/team/team.module';
+import { MembersModule } from './app/members/members.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { TeamModule } from './app/team/team.module';
       ],
     }),
     TeamModule,
+    MembersModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService],
