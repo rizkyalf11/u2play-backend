@@ -396,7 +396,7 @@ export class TeamService extends BaseResponse {
 
     try {
       const data = await this.prismaService.teamMembers.findMany({
-        where: filterQuery,
+        where: {...filterQuery, team_id: foundData.id},
         take: +pageSize,
         skip: limit,
         include: {
@@ -412,7 +412,7 @@ export class TeamService extends BaseResponse {
       });
 
       const count = await this.prismaService.teamMembers.count({
-        where: filterQuery,
+        where: {...filterQuery, team_id: foundData.id},
       });
 
       return this._pagination(

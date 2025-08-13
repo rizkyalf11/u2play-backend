@@ -1,4 +1,9 @@
-import { ApiProperty, PickType } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  OmitType,
+  PickType,
+} from '@nestjs/swagger';
 import { MemberRoles, MemberStatus } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
@@ -8,6 +13,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { PageRequestDto } from 'src/utils/dto/page.dto';
 
 export class MemberDto {
   @IsNumber()
@@ -22,7 +28,10 @@ export class MemberDto {
   user_id: number;
 
   @IsEnum(MemberRoles)
-  @ApiProperty({ example: 'player', description: 'player, coach, manager, captain' })
+  @ApiProperty({
+    example: 'player',
+    description: 'player, coach, manager, captain',
+  })
   role: MemberRoles;
 
   @IsString()
@@ -32,11 +41,14 @@ export class MemberDto {
 
   @IsString()
   @IsOptional()
-  @ApiProperty({ example: 'player name', description: 'in game name'})
+  @ApiProperty({ example: 'player name', description: 'in game name' })
   in_game_name?: string;
 
   @IsEnum(MemberStatus)
-  @ApiProperty({ example: 'invited', description: 'invited, joined, rejected, leaved' })
+  @ApiProperty({
+    example: 'invited',
+    description: 'invited, joined, rejected, leaved',
+  })
   status: MemberStatus;
 
   @IsDate()
@@ -72,3 +84,24 @@ export class CreateMemberDto extends PickType(MemberDto, [
   'team_id',
   'user_id',
 ]) {}
+export class UpdateMemberDto extends OmitType(MemberDto, ['id']) {}
+export class GetAllMemberFilterDto extends PageRequestDto {
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({
+    example: 'keyword',
+    description: 'Filter by username, name or email',
+  })
+  keyword?: string;
+
+  @IsOptional()
+  @IsEnum(MemberStatus, {
+    message: 'Status harus salah satu dari: invited, joined, rejected, leaved',
+  })
+  @ApiPropertyOptional({
+    example: 'invited',
+    description:
+      'Status harus salah satu dari: invited, joined, rejected, leaved',
+  })
+  status?: MemberStatus;
+}
