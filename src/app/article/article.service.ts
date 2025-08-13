@@ -257,14 +257,11 @@ export class ArticleService extends BaseResponse {
       sub_category: a.category?.parent?.name || null,
     });
 
-    return {
-      message: 'Article fetched successfully',
-      data: {
-        article: article,
-        popular: popularArticles.map(formatArticle),
-        latest: latestArticles.map(formatArticle),
-        recommendations: recommendations.map(formatArticle),
-      },
-    };
+    return this._success('Article fetched successfully', {
+      article: article,
+      popular: popularArticles.map(formatArticle),
+      latest: latestArticles.map(formatArticle),
+      recommendations: recommendations.map(formatArticle),
+    });
   }
 }

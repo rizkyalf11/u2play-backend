@@ -15,11 +15,7 @@ export class GamesService extends BaseResponse {
 
   async create(data: CreateGameDto) {
     const game = await this.prisma.games.create({ data });
-    return {
-      success: true,
-      message: 'Game created successfully',
-      data: game,
-    };
+    return this._success('oke berhasil', game);
   }
 
   async findAll(query: FindAllGamesDto) {
@@ -64,25 +60,19 @@ export class GamesService extends BaseResponse {
     if (!game) {
       throw new NotFoundException(`Game with ID ${id} not found`);
     }
-    return game;
+    // return game;
+    return this._success('oke berhasil', game);
   }
 
   async update(id: number, data: UpdateGameDto) {
     await this.findOne(id); // cek dulu
     const updated = await this.prisma.games.update({ where: { id }, data });
-    return {
-      success: true,
-      message: 'Game updated successfully',
-      data: updated,
-    };
+    return this._success('oke berhasil', updated);
   }
 
   async remove(id: number) {
     await this.findOne(id); // cek dulu
     await this.prisma.games.delete({ where: { id } });
-    return {
-      success: true,
-      message: 'Game deleted successfully',
-    };
+    return this._success('oke berhasil');
   }
 }
