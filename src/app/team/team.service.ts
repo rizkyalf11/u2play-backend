@@ -286,7 +286,24 @@ export class TeamService extends BaseResponse {
       },
     });
 
-    if (!!findInvitedMember) {
+    if (!!findInvitedMember && ['leaved', 'rejected'].includes(findInvitedMember.status)) {
+      try {
+        await this.prismaService.teamMembers.update({
+          where: findInvitedMember,
+          data: {
+            status: 'invited'
+          }
+        })
+
+        return this._success('Member re-invited successfully');
+      } catch (error) {
+        throw new HttpException(
+        'Failed to invite member',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+      }
+      
+    } else if (!!findInvitedMember) {
       throw new HttpException(
         'User is already invited to your team',
         HttpStatus.UNPROCESSABLE_ENTITY,
@@ -307,7 +324,7 @@ export class TeamService extends BaseResponse {
       );
 
     try {
-      const newMember = await this.prismaService.teamMembers.create({
+      await this.prismaService.teamMembers.create({
         data: {
           team_id: id,
           user_id: payload.user_id,
@@ -316,7 +333,7 @@ export class TeamService extends BaseResponse {
         },
       });
 
-      return this._success('Member invited successfully', newMember);
+      return this._success('Member invited successfully');
     } catch (error) {
       console.log(error);
       throw new HttpException(
@@ -326,7 +343,7 @@ export class TeamService extends BaseResponse {
     }
   }
 
-  async acceptInvitation(id: number, payload : AcceptInvitationDto) {
+  async acceptInvitation(id: number, payload: AcceptInvitationDto) {
     const foundData = await this.prismaService.teamMembers.findFirst({
       where: { id, user_id: this.req.user.id, status: 'invited' },
     });
@@ -389,9 +406,9 @@ export class TeamService extends BaseResponse {
               name: true,
               username: true,
               email: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       const count = await this.prismaService.teamMembers.count({
@@ -414,12 +431,19 @@ export class TeamService extends BaseResponse {
   }
 
   async updateMemberData(
-    idTeam: number,
     idMember: number,
     payload: UpdateTeamMember,
   ) {
+
+    const foundMember = await this.prismaService.teamMembers.findUnique({
+      where: { id: idMember },
+    });
+
+    if (!foundMember)
+      throw new HttpException('no member found', HttpStatus.NOT_FOUND);
+
     const foundData = await this.prismaService.teams.findUnique({
-      where: { id: idTeam },
+      where: { id: foundMember.team_id },
     });
 
     if (!foundData) {
@@ -428,7 +452,7 @@ export class TeamService extends BaseResponse {
 
     const findMember = await this.prismaService.teamMembers.findFirst({
       where: {
-        team_id: idTeam,
+        team_id: foundMember.team_id,
         user_id: this.req.user.id,
       },
     });
@@ -447,22 +471,84 @@ export class TeamService extends BaseResponse {
       );
     }
 
-    const foundMember = await this.prismaService.teamMembers.findUnique({
-      where: { id: idMember },
-    });
-
-    if (!foundMember)
-      throw new HttpException('no member found', HttpStatus.NOT_FOUND);
+    
 
     try {
       const data = await this.prismaService.teamMembers.update({
         where: foundMember,
-        data: payload
-      })
+        data: payload,
+      });
 
-      return this._success('success update member', data)
+      return this._success('success update member', data);
     } catch (error) {
-      throw new HttpException('smth went wrong!', HttpStatus.INTERNAL_SERVER_ERROR)
+      throw new HttpException(
+        'smth went wrong!',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async kickMember( IdMember: number) {
+    const foundMember = await this.prismaService.teamMembers.findFirst({
+      where: {
+        id: IdMember,
+        status: 'joined',
+      },
+    });
+
+    if (!foundMember)
+      throw new HttpException('no joined member found', HttpStatus.NOT_FOUND);
+
+    if (foundMember.role == 'captain')
+      throw new HttpException(
+        'you cant kick captain',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    const foundData = await this.prismaService.teams.findUnique({
+      where: { id: foundMember.team_id },
+    });
+
+    if (!foundData) {
+      throw new HttpException('Team not found', HttpStatus.NOT_FOUND);
+    }
+
+    const findMember = await this.prismaService.teamMembers.findFirst({
+      where: {
+        team_id: foundMember.team_id,
+        user_id: this.req.user.id,
+      },
+    });
+
+    if (!findMember) {
+      throw new HttpException(
+        'You are not a member of this team',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    if (findMember.role != 'captain') {
+      throw new HttpException(
+        'You are not the captain of this team',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    
+
+    try {
+      await this.prismaService.teamMembers.update({
+        where: foundMember,
+        data: {
+          status: 'leaved',
+        },
+      });
+
+      return this._success('success kick member');
+    } catch (error) {
+      throw new HttpException(
+        'smth went wrong!',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

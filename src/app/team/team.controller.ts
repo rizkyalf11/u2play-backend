@@ -111,12 +111,19 @@ export class TeamController {
   @UseGuards(JwtGuard, RoleGuard)
   @Roles(['user'])
   @ApiBearerAuth('token')
-  @Put('/members/:idTeam/:idMember')
+  @Put('/members/:idMember')
   updateMemberdata(
-    @Param('idTeam') idTeam: number,
     @Param('idMember') idMember: number,
     @Body() payload: UpdateTeamMember,
   ) {
-    return this.teamService.updateMemberData(idTeam, idMember, payload);
+    return this.teamService.updateMemberData(idMember, payload);
+  }
+
+  @UseGuards(JwtGuard, RoleGuard)
+  @Roles(['user'])
+  @ApiBearerAuth('token')
+  @Put('/kick/:idMember')
+  kick(@Param('idMember') idMember: number) {
+    return this.teamService.kickMember(+idMember)
   }
 }
