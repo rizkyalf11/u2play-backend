@@ -171,7 +171,7 @@ export class AuthService extends BaseResponse {
     }
 
     const token = randomBytes(32).toString('hex');
-    const link = `http://localhost:${process.env.APP_PORT}/auth/reset-password/${data.id}/${token}`;
+    const link = `${process.env.ORIGIN}/reset-password/${data.id}/${token}`;
 
     try {
       await this.mailService.sendEmail({
