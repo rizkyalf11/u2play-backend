@@ -34,7 +34,7 @@ async function bootstrap() {
   );
   app.useStaticAssets(path.join(__dirname, '..', 'public'));
   app.enableCors({ origin: process.env.ORIGIN!, credentials: true });
-  await app.listen(process.env.APP_PORT!);
+  await app.listen(process.env.APP_PORT!, '127.0.0.1');
   console.log('run at', process.env.APP_PORT!);
   // console.log(
   //   'documentation at -> http://localhost:' + process.env.APP_PORT! + '/api',
