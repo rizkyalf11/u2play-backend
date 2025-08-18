@@ -77,13 +77,17 @@ export class AuthService extends BaseResponse {
     const foundData = await this.prismaService.user.findFirst({
       where: {
         provider: 'credential',
-        email: payload.email,
+        OR: [
+          {email: payload.email},
+
+          {username: payload.username}
+        ]
       },
     });
 
     if (foundData) {
       throw new HttpException(
-        'Email already registered',
+        'Email or username already registered',
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }

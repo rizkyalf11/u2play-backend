@@ -18,11 +18,16 @@ export class AuthSuperService extends BaseResponse {
 
   async createUser(payload: CreateUserDto) {
     const found = await this.prismaService.user.findFirst({
-      where: { email: payload.email },
+      where: {
+        OR: [
+          { email: payload.email },
+          {username: payload.username}
+        ]
+      },
     });
     if (!!found)
       throw new HttpException(
-        'Email already registered',
+        'Email or username already registered',
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
 
