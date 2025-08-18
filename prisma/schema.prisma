@@ -44,6 +44,17 @@ enum MemberStatus {
   leaved
 }
 
+enum Loc {
+  game
+  banner
+  tim
+  user
+  tournament
+  article
+  other
+
+}
+
 model User {
   id       Int      @id @default(autoincrement()) @db.UnsignedInt
   clientId String?  @map("client_id")
@@ -208,6 +219,8 @@ model Teams {
   game Games @relation(fields: [game_id], references: [id])
 
   TeamMembers TeamMembers[]
+
+  @@map("teams")
 }
 
 model TeamMembers {
@@ -230,4 +243,13 @@ model TeamMembers {
   user User @relation(fields: [user_id], references: [id])
 
   @@unique([team_id, user_id])
+  @@map("team_members")
+}
+
+model Gallery {
+  id Int @id @default(autoincrement()) @db.UnsignedInt
+  url String 
+  loc Loc @default(other)
+
+  @@map("gallery")
 }
