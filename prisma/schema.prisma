@@ -44,11 +44,21 @@ enum MemberStatus {
   leaved
 }
 
+enum Loc {
+  game
+  banner
+  tim
+  user
+  tournament
+  article
+  other
+}
+
 model User {
   id       Int      @id @default(autoincrement()) @db.UnsignedInt
   clientId String?  @map("client_id")
   name     String
-  username String
+  username String   @unique
   email    String   @unique
   password String?
   role     AuthRole @default(user)
@@ -57,15 +67,15 @@ model User {
   provider Provider @default(credential)
   avatar   String?
 
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
-  Articles  Articles[]
-  ResetPassword ResetPassword[]
+  createdAt              DateTime        @default(now()) @map("created_at")
+  updatedAt              DateTime        @updatedAt @map("updated_at")
+  Articles               Articles[]
+  ResetPassword          ResetPassword[]
   notifications_sent     Notifications[] @relation("NotificationSender")
   notifications_received Notifications[] @relation("NotificationRecipient")
+  TeamMembers            TeamMembers[]
 
   @@map("users")
-  TeamMembers TeamMembers[]
 }
 
 model ResetPassword {
@@ -96,7 +106,7 @@ model Category {
   id         Int      @id @default(autoincrement()) @db.UnsignedInt
   name       String   @db.VarChar(255)
   slug       String   @db.VarChar(255)
-  parent_id  Int? @db.UnsignedInt
+  parent_id  Int?     @db.UnsignedInt
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -115,7 +125,7 @@ model Articles {
   title        String     @db.VarChar(255)
   description  String     @db.VarChar(500)
   slug         String     @db.VarChar(255)
-  category_id  Int @db.UnsignedInt
+  category_id  Int        @db.UnsignedInt
   content      String     @db.LongText
   visibility   Visibility @default(PRIVATE)
   published_at DateTime?
@@ -136,7 +146,7 @@ model Articles {
 model ArticleViews {
   id         Int      @id @default(autoincrement()) @db.UnsignedInt
   article    Articles @relation(fields: [article_id], references: [id])
-  article_id Int @db.UnsignedInt
+  article_id Int      @db.UnsignedInt
   ip_address String
   viewed_at  DateTime @default(now())
 
@@ -146,8 +156,8 @@ model ArticleViews {
 
 model ArticleTag {
   id         Int      @id @default(autoincrement()) @db.UnsignedInt
-  article_id Int @db.UnsignedInt
-  tag_id     Int @db.UnsignedInt
+  article_id Int      @db.UnsignedInt
+  tag_id     Int      @db.UnsignedInt
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -168,6 +178,7 @@ model Games {
   updated_at DateTime? @updatedAt
 
   teams Teams[]
+
   @@map("games")
 }
 
@@ -187,7 +198,7 @@ model Notifications {
 }
 
 model Promotion_banners {
-  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
   image      String
   link_url   String?
   created_at DateTime? @default(now())
@@ -197,37 +208,48 @@ model Promotion_banners {
 }
 
 model Teams {
-  id Int @id @default(autoincrement()) @db.UnsignedInt
-  name String
-  game_id Int @db.UnsignedInt
-  image String
-  noTelp String @map("no_telp")
-  bio String? @db.Text
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  name       String
+  game_id    Int       @db.UnsignedInt
+  image      String
+  noTelp     String    @map("no_telp")
+  bio        String?   @db.Text
   created_at DateTime? @default(now())
   updated_at DateTime? @updatedAt
-  game Games @relation(fields: [game_id], references: [id])
+  game       Games     @relation(fields: [game_id], references: [id])
 
   TeamMembers TeamMembers[]
+
+  @@map("teams")
 }
 
 model TeamMembers {
-  id Int @id @default(autoincrement()) @db.UnsignedInt
-  team_id Int @db.UnsignedInt
-  user_id Int @db.UnsignedInt
-  role MemberRoles @default(player)
-  in_game_id String?
+  id           Int          @id @default(autoincrement()) @db.UnsignedInt
+  team_id      Int          @db.UnsignedInt
+  user_id      Int          @db.UnsignedInt
+  role         MemberRoles  @default(player)
+  in_game_id   String?
   in_game_name String?
-  status MemberStatus @default(invited)
-  invited_at DateTime? @default(now()) @map("invited_at")
-  joined_at DateTime? @map("joined_at")
-  rejected_at DateTime? @map("rejected_at")
-  leaved_at DateTime? @map("leaved_at")
+  status       MemberStatus @default(invited)
+  invited_at   DateTime?    @default(now()) @map("invited_at")
+  joined_at    DateTime?    @map("joined_at")
+  rejected_at  DateTime?    @map("rejected_at")
+  leaved_at    DateTime?    @map("leaved_at")
 
   created_at DateTime? @default(now())
   updated_at DateTime? @updatedAt
 
   team Teams @relation(fields: [team_id], references: [id])
-  user User @relation(fields: [user_id], references: [id])
+  user User  @relation(fields: [user_id], references: [id])
 
   @@unique([team_id, user_id])
+  @@map("team_members")
+}
+
+model Gallery {
+  id  Int    @id @default(autoincrement()) @db.UnsignedInt
+  url String
+  loc Loc    @default(other)
+
+  @@map("gallery")
 }
