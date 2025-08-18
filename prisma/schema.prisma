@@ -54,6 +54,25 @@ enum Loc {
   other
 }
 
+enum TournamentStatus {
+  pending
+  in_progress
+  awaiting_review
+  complete
+}
+
+enum TournamentType {
+  single_stage
+  two_stage
+}
+
+enum TournamentFormat {
+  single_elimination
+  double_elimination
+  round_robin
+  swiss
+}
+
 model User {
   id       Int      @id @default(autoincrement()) @db.UnsignedInt
   clientId String?  @map("client_id")
@@ -74,6 +93,7 @@ model User {
   notifications_sent     Notifications[] @relation("NotificationSender")
   notifications_received Notifications[] @relation("NotificationRecipient")
   TeamMembers            TeamMembers[]
+  Tournaments            Tournaments[]
 
   @@map("users")
 }
@@ -177,7 +197,8 @@ model Games {
   created_at DateTime? @default(now())
   updated_at DateTime? @updatedAt
 
-  teams Teams[]
+  teams       Teams[]
+  Tournaments Tournaments[]
 
   @@map("games")
 }
@@ -252,4 +273,43 @@ model Gallery {
   loc Loc    @default(other)
 
   @@map("gallery")
+}
+
+model Tournaments {
+  id                       Int              @id @default(autoincrement()) @db.UnsignedInt
+  organized_by             Int              @db.UnsignedInt
+  tournament_name          String
+  image                    String
+  status                   TournamentStatus @default(pending)
+  tournaments_slug         String           @unique
+  tournament_challonge_url String           @unique
+  description              String           @db.Text
+  game_id                  Int              @db.UnsignedInt
+  tournament_type          TournamentType
+  tournament_format        TournamentFormat
+  group_stage_format       TournamentFormat?
+  participants_per_group   Int
+  advance_per_group        Int
+  is_paid                  Boolean          @default(false)
+  fee                      String?          @default("0")
+  limited_participant      Boolean          @default(false)
+  max_participant          Int?
+  registration_open        DateTime
+  registration_close       DateTime
+  tournament_start         DateTime
+  tournament_end           DateTime
+  required_check_in        Boolean?         @default(false)
+  check_in_date            DateTime?
+  is_offline_tournament    Boolean          @default(false)
+  location_address         String?          @db.Text
+  has_prize                Boolean          @default(false)
+  prize_pool               String?          @db.Text
+  youtube_link             String?
+  creates_at               DateTime?        @default(now())
+  updated_at               DateTime?        @updatedAt
+
+  Organized User  @relation(fields: [organized_by], references: [id])
+  Game      Games @relation(fields: [game_id], references: [id])
+
+  @@map("tournaments")
 }
