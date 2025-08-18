@@ -84,6 +84,18 @@ export class TournamentService extends BaseResponse {
       where: filterQuery,
       skip: limit,
       take: +pageSize,
+      include: {
+        Game: true,
+        Organized: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            email: true,
+            role: true
+          }
+        }
+      }
     });
 
     const count = await this.prismaService.tournaments.count({
