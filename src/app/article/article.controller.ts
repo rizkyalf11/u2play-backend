@@ -25,6 +25,7 @@ import {
 import {
   ArticleDetailQueryDto,
   CreateArticleDto,
+  DeleteBulkArticleDto,
   findAllArticlesDto,
   UpdateArticleDto,
 } from './aritcle.dto';
@@ -91,6 +92,14 @@ export class ArticleController {
       'unknown';
 
     return this.articlesService.findOneAndIncrementView(+id, ipAddress, query);
+  }
+
+  @UseGuards(JwtGuard, RoleGuard)
+  // @Roles(['admin'])
+  @ApiBearerAuth('token')
+  @Post('bulk-delete')
+  async removeBulk(@Body() dto: DeleteBulkArticleDto) {
+    return this.articlesService.removeBulk(dto.ids);
   }
 
   @UseGuards(JwtGuard, RoleGuard)
