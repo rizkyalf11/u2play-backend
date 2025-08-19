@@ -13,6 +13,16 @@ export class TournamentService extends BaseResponse {
     super();
   }
 
+  async uniqueCheck(slug: string) {
+    const findOne = await this.prismaService.tournaments.findUnique({
+      where: {
+        tournaments_slug: slug,
+      },
+    });
+
+    return this._success('success', findOne);
+  }
+
   async createTournament(payload: CreateTournamentDto) {
     const foundSlug = await this.prismaService.tournaments.findUnique({
       where: {
