@@ -20,6 +20,7 @@ export class TournamentController {
     return this.tournamentService.createTournament(payload);
   }
 
+  @Post('/uniquecheck')
   uniqueCheck(@Body('slug') slug: string) {
     return this.tournamentService.uniqueCheck(slug);
   }
