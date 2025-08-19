@@ -20,7 +20,9 @@ export class TournamentService extends BaseResponse {
       },
     });
 
-    return this._success('success', findOne);
+    if (findOne) return this._success('success', { isExist: true });
+
+    return this._success('success', { isExist: false });
   }
 
   async createTournament(payload: CreateTournamentDto) {
