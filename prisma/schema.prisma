@@ -65,14 +65,6 @@ enum TournamentType {
   single_stage
   two_stage
 }
-
-enum TournamentFormat {
-  single_elimination
-  double_elimination
-  round_robin
-  swiss
-}
-
 model User {
   id       Int      @id @default(autoincrement()) @db.UnsignedInt
   clientId String?  @map("client_id")
@@ -286,8 +278,8 @@ model Tournaments {
   description              String           @db.Text
   game_id                  Int              @db.UnsignedInt
   tournament_type          TournamentType
-  tournament_format        TournamentFormat
-  group_stage_format       TournamentFormat?
+  tournament_format        String
+  group_stage_format       String?
   participants_per_group   Int
   advance_per_group        Int
   is_paid                  Boolean          @default(false)

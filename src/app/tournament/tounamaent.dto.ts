@@ -1,6 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import {
-  TournamentFormat,
   TournamentStatus,
   TournamentType,
 } from '@prisma/client';
@@ -24,7 +23,6 @@ export class TournamentDto {
   organized_by: number;
 
   @IsString()
-  @Length(4)
   @ApiProperty({ example: 'valorant vct', description: 'tournament name' })
   tournament_name: string;
 
@@ -60,16 +58,16 @@ export class TournamentDto {
   @ApiProperty({ example: 'single_stage', description: 'tournament type' })
   tournament_type: TournamentType;
 
-  @IsEnum(TournamentFormat)
   @ApiProperty({
     example: 'single_elimination',
     description: 'tournament format',
   })
-  tournament_format: TournamentFormat;
+  @IsString()
+  tournament_format: string;
 
-  @IsEnum(TournamentFormat)
   @ApiProperty({ example: 'single_elimination', description: 'group format' })
-  group_stage_format: TournamentFormat;
+  @IsString()
+  group_stage_format: string;
 
   @IsInt()
   @ApiProperty({ example: 5, description: 'participant count' })
