@@ -20,10 +20,6 @@ export class TournamentController {
     return this.tournamentService.createTournament(payload);
   }
 
-  @UseGuards(JwtGuard, RoleGuard)
-  @ApiBearerAuth('token')
-  @Roles(['organizer'])
-  @Post('/uniquecheck')
   uniqueCheck(@Body('slug') slug: string) {
     return this.tournamentService.uniqueCheck(slug);
   }
