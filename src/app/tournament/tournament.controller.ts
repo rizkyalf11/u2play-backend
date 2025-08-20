@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { TournamentService } from './tournament.service';
 import { JwtGuard } from 'src/guard/auth/auth.guard';
 import { RoleGuard } from 'src/guard/role/role.guard';
@@ -46,5 +46,10 @@ export class TournamentController {
   })
   getTournaments(@Pagination() query: GetTournamentFilter) {
     return this.tournamentService.getTournamets(query);
+  }
+
+  @Get('/detail/:id')
+  getDetail(@Param('id') id: number) {
+    return this.tournamentService.getDetail(id)
   }
 }
