@@ -95,8 +95,9 @@ export class ArticleService extends BaseResponse {
   }
 
   async findAll(params: findAllArticlesDto) {
-    const { page, pageSize, title, keyword } = params;
+    const { page, pageSize, title, keyword, categorySlug, tagSlug } = params;
     const skip = (page - 1) * pageSize;
+
     const where: any = {};
 
     if (title) {
@@ -109,6 +110,22 @@ export class ArticleService extends BaseResponse {
         { description: { contains: keyword } },
         { content: { contains: keyword } },
       ];
+    }
+
+    if (categorySlug) {
+      where.category = {
+        slug: { contains: categorySlug },
+      };
+    }
+
+    if (tagSlug) {
+      where.article_tags = {
+        some: {
+          tag: {
+            slug: { contains: tagSlug },
+          },
+        },
+      };
     }
 
     const [articles, total] = await Promise.all([

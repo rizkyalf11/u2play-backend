@@ -41,8 +41,7 @@ export class TournamentController {
   @ApiQuery({
     name: 'game_id',
     required: false,
-    description:
-      'game id',
+    description: 'game id',
   })
   getTournaments(@Pagination() query: GetTournamentFilter) {
     return this.tournamentService.getTournamets(query);
@@ -50,6 +49,6 @@ export class TournamentController {
 
   @Get('/detail/:id')
   getDetail(@Param('id') id: number) {
-    return this.tournamentService.getDetail(id)
+    return this.tournamentService.getDetail(id);
   }
 }

@@ -58,6 +58,8 @@ export class ArticleController {
     required: false,
     example: 'kata kunci pencarian',
   })
+  @ApiQuery({ name: 'categorySlug', required: false, example: 'kategori-slug' })
+  @ApiQuery({ name: 'tagSlug', required: false, example: 'tag-slug' })
   async findAll(@Pagination() query: findAllArticlesDto) {
     return this.articlesService.findAll(query);
   }

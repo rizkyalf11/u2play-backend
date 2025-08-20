@@ -65,6 +65,7 @@ enum TournamentType {
   single_stage
   two_stage
 }
+
 model User {
   id       Int      @id @default(autoincrement()) @db.UnsignedInt
   clientId String?  @map("client_id")
@@ -78,14 +79,15 @@ model User {
   provider Provider @default(credential)
   avatar   String?
 
-  createdAt              DateTime        @default(now()) @map("created_at")
-  updatedAt              DateTime        @updatedAt @map("updated_at")
-  Articles               Articles[]
-  ResetPassword          ResetPassword[]
-  notifications_sent     Notifications[] @relation("NotificationSender")
-  notifications_received Notifications[] @relation("NotificationRecipient")
-  TeamMembers            TeamMembers[]
-  Tournaments            Tournaments[]
+  createdAt                    DateTime                       @default(now()) @map("created_at")
+  updatedAt                    DateTime                       @updatedAt @map("updated_at")
+  Articles                     Articles[]
+  ResetPassword                ResetPassword[]
+  notifications_sent           Notifications[]                @relation("NotificationSender")
+  notifications_received       Notifications[]                @relation("NotificationRecipient")
+  TeamMembers                  TeamMembers[]
+  Tournaments                  Tournaments[]
+  participants_tournament_solo participants_tournament_solo[]
 
   @@map("users")
 }
@@ -300,8 +302,26 @@ model Tournaments {
   creates_at               DateTime?        @default(now())
   updated_at               DateTime?        @updatedAt
 
-  Organized User  @relation(fields: [organized_by], references: [id])
-  Game      Games @relation(fields: [game_id], references: [id])
+  Organized         User                           @relation(fields: [organized_by], references: [id])
+  Game              Games                          @relation(fields: [game_id], references: [id])
+  participants_solo participants_tournament_solo[]
 
   @@map("tournaments")
+}
+
+model participants_tournament_solo {
+  id            Int       @id @default(autoincrement()) @db.UnsignedInt
+  id_challonge  Int?
+  user_id       Int       @db.UnsignedInt
+  tournament_id Int       @db.UnsignedInt
+  in_game_name  String
+  seed          Int
+  in_game_id    String
+  group_id      Int?      @db.UnsignedInt
+  created_at    DateTime? @default(now())
+  updated_at    DateTime? @updatedAt
+
+  // Relations
+  user       User        @relation(fields: [user_id], references: [id])
+  tournament Tournaments @relation(fields: [tournament_id], references: [id])
 }
