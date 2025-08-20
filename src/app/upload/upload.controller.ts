@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Delete,
   HttpException,
@@ -18,8 +19,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import BaseResponse from 'src/utils/baseresponse/baseresponse.class';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { UploadDto } from './upload.dot';
+import { PrismaService } from 'src/prisma/prisma.service';
 @Controller('upload')
 export class UploadController extends BaseResponse {
+  constructor(private prismaService: PrismaService) {
+    super()
+  }
   @Post('single')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -63,6 +69,9 @@ export class UploadController extends BaseResponse {
           type: 'string',
           format: 'binary',
         },
+        loc: {
+          type: "string"
+        }
       },
     },
   })
@@ -70,14 +79,21 @@ export class UploadController extends BaseResponse {
     @UploadedFile()
     file: Express.Multer.File,
     // @Res() res: Response,
+    @Body() payload : UploadDto
   ): Promise<any> {
     try {
-      console.log(file);
+      console.log(payload);
       //   if (!file)
       //     return res.status(400).json({
       //       message: 'please enter an image',
       //     });
       const url = `http://localhost:${process.env.APP_PORT}/uploads/${file.filename}`;
+      await this.prismaService.gallery.create({
+        data: {
+          url: url,
+          loc: payload.loc
+        }
+      })
       return this._success('OK', {
         file_url: url,
         file_name: file.filename,

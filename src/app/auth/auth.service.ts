@@ -41,6 +41,7 @@ export class AuthService extends BaseResponse {
         name: true,
         role: true,
         password: true,
+        provider: true,
       },
     });
 
@@ -48,7 +49,7 @@ export class AuthService extends BaseResponse {
       throw new HttpException('Email not registered', HttpStatus.NOT_FOUND);
     }
 
-    const isCorrect = await compare(payload.password, foundData?.password);
+    const isCorrect = await compare(payload.password, foundData?.password!);
     (BigInt.prototype as any).toJSON = function () {
       return Number(this);
     };
@@ -63,6 +64,7 @@ export class AuthService extends BaseResponse {
       // });
 
       return this._success('login successful', {
+        ...userData,
         access_token: accessToken,
       });
     } else {
@@ -77,13 +79,13 @@ export class AuthService extends BaseResponse {
     const foundData = await this.prismaService.user.findFirst({
       where: {
         provider: 'credential',
-        email: payload.email,
+        OR: [{ email: payload.email }, { username: payload.username }],
       },
     });
 
     if (foundData) {
       throw new HttpException(
-        'Email already registered',
+        'Email or username already registered',
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
@@ -134,13 +136,12 @@ export class AuthService extends BaseResponse {
               select: {
                 id: true,
                 name: true,
-                image: true
-              }
-            }
-          }
-        }
+                image: true,
+              },
+            },
+          },
+        },
       },
-
     });
 
     const currentTeam = await this.prismaService.teams.findFirst({
@@ -148,15 +149,15 @@ export class AuthService extends BaseResponse {
         TeamMembers: {
           some: {
             user_id: this.req.user.id,
-            status: 'joined'
-          }
-        }
-      }
-    })
+            status: 'joined',
+          },
+        },
+      },
+    });
 
     if (!data) throw new HttpException('user not found', HttpStatus.NOT_FOUND);
 
-    return this._success('success get profile', {...data, currentTeam});
+    return this._success('success get profile', { ...data, currentTeam });
   }
 
   async forgetPassword(payload: ForgetPasswordDto) {
