@@ -41,8 +41,7 @@ export class TournamentController {
   @ApiQuery({
     name: 'game_id',
     required: false,
-    description:
-      'game id',
+    description: 'game id',
   })
   getTournaments(@Pagination() query: GetTournamentFilter) {
     return this.tournamentService.getTournamets(query);

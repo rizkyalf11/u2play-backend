@@ -1,6 +1,7 @@
 import { ApiPaginationQuery } from 'src/utils/decorators/pagination.swagger';
 import {
   CreateCategoryDto,
+  DeleteBulkCategoryDto,
   FindAllCategoriesDto,
   UpdateCategoryDto,
 } from './categories.dto';
@@ -55,6 +56,16 @@ export class CategoriesController {
     return {
       success: true,
       message: 'Category retrieved successfully',
+      data,
+    };
+  }
+
+  @Post('bulk-delete')
+  async removeBulk(@Body() dto: DeleteBulkCategoryDto) {
+    const data = await this.categoryService.removeBulk(dto.ids);
+    return {
+      success: true,
+      message: 'Categories deleted successfully',
       data,
     };
   }
