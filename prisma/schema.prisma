@@ -305,6 +305,7 @@ model Tournaments {
   Organized         User                           @relation(fields: [organized_by], references: [id])
   Game              Games                          @relation(fields: [game_id], references: [id])
   participants_solo participants_tournament_solo[]
+  broadcastTalents  tournament_broadcast_talents[]
 
   @@map("tournaments")
 }
@@ -324,4 +325,28 @@ model participants_tournament_solo {
   // Relations
   user       User        @relation(fields: [user_id], references: [id])
   tournament Tournaments @relation(fields: [tournament_id], references: [id])
+}
+
+model broadcast_talents {
+  id             Int                            @id @default(autoincrement()) @db.UnsignedInt
+  name           String
+  image          String?
+  instagram_link String?
+  tournaments    tournament_broadcast_talents[]
+}
+
+model tournament_broadcast_talents {
+  id            Int               @id @default(autoincrement()) @db.UnsignedInt
+  tournament_id Int               @db.UnsignedInt
+  talent_id     Int               @db.UnsignedInt
+  role          ROLE_TALENT
+
+  talent        broadcast_talents @relation(fields: [talent_id], references: [id])
+  tournament    Tournaments       @relation(fields: [tournament_id], references: [id])
+}
+
+enum ROLE_TALENT {
+  HOST
+  CASTER
+  ANALYST
 }
