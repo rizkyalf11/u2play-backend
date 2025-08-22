@@ -45,6 +45,9 @@ export class ParticipantsTournamentSoloController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOne(id);
   }
+
+  @UseGuards(JwtGuard, RoleGuard)
+  @ApiBearerAuth('token')
   @Get('check/:tournamentId')
   check(@Param('tournamentId', ParseIntPipe) tournamentId: number) {
     return this.service.checkEndpoint(tournamentId);
