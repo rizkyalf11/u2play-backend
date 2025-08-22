@@ -14,6 +14,7 @@ import { ParticipantsTournamentSoloService } from './participants-tournament-sol
 import {
   CreateParticipantSoloDto,
   FindAllParticipantSoloDto,
+  FindUsersByTournamentDto,
   UpdateParticipantSoloDto,
 } from './participants-tournament-solo.dto';
 import { ApiPaginationQuery } from 'src/utils/decorators/pagination.swagger';
@@ -54,10 +55,15 @@ export class ParticipantsTournamentSoloController {
   }
 
   @Get('tournament/:tournamentId/users')
+  @ApiPaginationQuery()
+  @ApiQuery({ name: 'in_game_name', required: false, example: 'Player123' })
+  @ApiQuery({ name: 'user_name', required: false, example: 'john_doe' })
+  @ApiQuery({ name: 'email', required: false, example: 'john@example.com' })
   findUsersByTournament(
     @Param('tournamentId', ParseIntPipe) tournamentId: number,
+    @Pagination() query: FindUsersByTournamentDto,
   ) {
-    return this.service.findUsersByTournament(tournamentId);
+    return this.service.findUsersByTournament(tournamentId, query);
   }
 
   @UseGuards(JwtGuard, RoleGuard)

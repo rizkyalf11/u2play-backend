@@ -9,6 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import {
   CreateParticipantSoloDto,
   FindAllParticipantSoloDto,
+  FindUsersByTournamentDto,
   UpdateParticipantSoloDto,
 } from './participants-tournament-solo.dto';
 import BaseResponse from 'src/utils/baseresponse/baseresponse.class';
@@ -35,7 +36,13 @@ export class ParticipantsTournamentSoloService extends BaseResponse {
   }
 
   // Tambahin fungsi baru di service
-  async findUsersByTournament(tournamentId: number) {
+  async findUsersByTournament(
+    tournamentId: number,
+    query: FindUsersByTournamentDto,
+  ) {
+    const { page = 1, pageSize = 10, in_game_name, username, email } = query;
+    const skip = (page - 1) * pageSize;
+
     // cek tournament ada atau tidak
     const tournament = await this.prisma.tournaments.findUnique({
       where: { id: tournamentId },
@@ -47,19 +54,48 @@ export class ParticipantsTournamentSoloService extends BaseResponse {
       );
     }
 
-    // ambil list participants beserta user nya
-    const participants =
-      await this.prisma.participants_tournament_solo.findMany({
-        where: { tournament_id: tournamentId },
+    // filter
+    const where: any = {
+      tournament_id: tournamentId,
+    };
+
+    if (in_game_name) {
+      where.in_game_name = {
+        contains: in_game_name,
+      };
+    }
+
+    if (username || email) {
+      where.user = {};
+      if (username) {
+        where.user.username = { contains: username };
+      }
+      if (email) {
+        where.user.email = { contains: email };
+      }
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.participants_tournament_solo.findMany({
+        where,
+        skip,
+        take: +pageSize,
         include: {
-          user: true, // otomatis ambil data user (misalnya username, email, dsb)
+          user: {
+            select: { id: true, username: true, email: true }, // hanya ambil field penting
+          },
         },
         orderBy: { created_at: 'desc' },
-      });
+      }),
+      this.prisma.participants_tournament_solo.count({ where }),
+    ]);
 
-    return this._success(
+    return this._pagination(
       `List participants untuk tournament ${tournament.tournament_name}`,
-      participants,
+      items,
+      total,
+      page,
+      pageSize,
     );
   }
 

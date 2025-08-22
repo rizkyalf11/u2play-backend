@@ -62,6 +62,37 @@ export class UpdateParticipantSoloDto extends PickType(ParticipantSoloDTO, [
   'group_id',
 ]) {}
 
+export class FindUsersByTournamentDto extends PageRequestDto {
+  @IsInt()
+  @IsOptional()
+  @ApiPropertyOptional({
+    example: 10,
+    description: 'Tournament ID (wajib diisi di path)',
+  })
+  tournament_id?: number;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({
+    example: 'Player123',
+    description: 'Search by in-game name',
+  })
+  in_game_name?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({ example: 'john', description: 'Search by username' })
+  username?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({
+    example: 'john@example.com',
+    description: 'Search by email',
+  })
+  email?: string;
+}
+
 export class FindAllParticipantSoloDto extends PageRequestDto {
   @IsString()
   @IsOptional()
