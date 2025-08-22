@@ -49,6 +49,6 @@ export class TournamentController {
 
   @Get('/detail/:slug')
   getDetail(@Param('slug') slug: string) {
-    return this.tournamentService.getDetail(slug)
+    return this.tournamentService.getDetail(slug);
   }
 }

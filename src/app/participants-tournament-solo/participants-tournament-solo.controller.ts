@@ -21,13 +21,13 @@ import { Pagination } from 'src/utils/decorators/pagination.decorator';
 import { JwtGuard } from 'src/guard/auth/auth.guard';
 import { RoleGuard } from 'src/guard/role/role.guard';
 
-@UseGuards(JwtGuard, RoleGuard)
-@ApiBearerAuth('token')
 @ApiTags('Participants Tournament Solo')
 @Controller('participants-solo')
 export class ParticipantsTournamentSoloController {
   constructor(private readonly service: ParticipantsTournamentSoloService) {}
 
+  @UseGuards(JwtGuard, RoleGuard)
+  @ApiBearerAuth('token')
   @Post()
   create(@Body() data: CreateParticipantSoloDto) {
     return this.service.create(data);
@@ -57,6 +57,8 @@ export class ParticipantsTournamentSoloController {
     return this.service.findUsersByTournament(tournamentId);
   }
 
+  @UseGuards(JwtGuard, RoleGuard)
+  @ApiBearerAuth('token')
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -65,6 +67,8 @@ export class ParticipantsTournamentSoloController {
     return this.service.update(id, data);
   }
 
+  @UseGuards(JwtGuard, RoleGuard)
+  @ApiBearerAuth('token')
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.service.remove(id);
