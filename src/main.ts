@@ -32,7 +32,7 @@ async function bootstrap() {
     }),
   );
   app.useStaticAssets(path.join(__dirname, '..', 'public'));
-  app.enableCors({ origin: '*', credentials: true });
+  app.enableCors();
   await app.listen(process.env.APP_PORT!);
   console.log('run at', process.env.APP_PORT!);
   console.log(
