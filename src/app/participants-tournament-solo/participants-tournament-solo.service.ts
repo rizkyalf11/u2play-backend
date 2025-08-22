@@ -23,25 +23,87 @@ export class ParticipantsTournamentSoloService extends BaseResponse {
     super();
   }
 
+  async checkDuplicate(tournamentId: number, userId: number) {
+    const exists = await this.prisma.participants_tournament_solo.findFirst({
+      where: {
+        tournament_id: tournamentId,
+        user_id: userId,
+      },
+    });
+
+    return !!exists; // true kalau sudah ada
+  }
+
+  // Tambahin fungsi baru di service
+  async findUsersByTournament(tournamentId: number) {
+    // cek tournament ada atau tidak
+    const tournament = await this.prisma.tournaments.findUnique({
+      where: { id: tournamentId },
+    });
+
+    if (!tournament) {
+      throw new NotFoundException(
+        `Tournament dengan id ${tournamentId} tidak ditemukan`,
+      );
+    }
+
+    // ambil list participants beserta user nya
+    const participants =
+      await this.prisma.participants_tournament_solo.findMany({
+        where: { tournament_id: tournamentId },
+        include: {
+          user: true, // otomatis ambil data user (misalnya username, email, dsb)
+        },
+        orderBy: { created_at: 'desc' },
+      });
+
+    return this._success(
+      `List participants untuk tournament ${tournament.tournament_name}`,
+      participants,
+    );
+  }
+
   async create(data: CreateParticipantSoloDto) {
     try {
       const userId = this.req.user.id; // otomatis ambil user login
+
+      const tournament = await this.prisma.tournaments.findUnique({
+        where: { id: data.tournament_id },
+      });
+
+      if (!tournament) {
+        throw new NotFoundException(
+          `Tournament dengan id ${data.tournament_id} tidak ditemukan`,
+        );
+      }
+
+      // 🚨 validasi duplikat
+      const alreadyJoined = await this.checkDuplicate(
+        data.tournament_id,
+        userId,
+      );
+      if (alreadyJoined) {
+        throw new HttpException(
+          {
+            status: HttpStatus.CONFLICT,
+            message: 'User sudah terdaftar di tournament ini',
+          },
+          HttpStatus.CONFLICT,
+        );
+      }
 
       const participant = await this.prisma.participants_tournament_solo.create(
         {
           data: {
             ...data,
-            user_id: userId, // auto isi dari req.user
+            user_id: userId,
           },
         },
       );
 
-      return {
-        status: 'success',
-        message: 'Participant created successfully',
-        data: participant,
-      };
+      return this._success('Participant created successfully', participant);
     } catch (error) {
+      if (error instanceof HttpException) throw error;
       throw new HttpException(
         {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -50,6 +112,17 @@ export class ParticipantsTournamentSoloService extends BaseResponse {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async checkEndpoint(tournamentId: number) {
+    const userId = this.req.user.id;
+    const alreadyJoined = await this.checkDuplicate(tournamentId, userId);
+
+    return this._success('Check participant status', {
+      alreadyJoined,
+      tournamentId,
+      userId,
+    });
   }
 
   async findAll(query: FindAllParticipantSoloDto) {

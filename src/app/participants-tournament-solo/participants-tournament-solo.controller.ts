@@ -45,6 +45,17 @@ export class ParticipantsTournamentSoloController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOne(id);
   }
+  @Get('check/:tournamentId')
+  check(@Param('tournamentId', ParseIntPipe) tournamentId: number) {
+    return this.service.checkEndpoint(tournamentId);
+  }
+
+  @Get('tournament/:tournamentId/users')
+  findUsersByTournament(
+    @Param('tournamentId', ParseIntPipe) tournamentId: number,
+  ) {
+    return this.service.findUsersByTournament(tournamentId);
+  }
 
   @Patch(':id')
   update(
