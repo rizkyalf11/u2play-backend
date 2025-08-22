@@ -25,6 +25,7 @@ import {
 import {
   ArticleDetailQueryDto,
   CreateArticleDto,
+  DeleteBulkArticleDto,
   findAllArticlesDto,
   UpdateArticleDto,
 } from './aritcle.dto';
@@ -57,6 +58,8 @@ export class ArticleController {
     required: false,
     example: 'kata kunci pencarian',
   })
+  @ApiQuery({ name: 'categorySlug', required: false, example: 'kategori-slug' })
+  @ApiQuery({ name: 'tagSlug', required: false, example: 'tag-slug' })
   async findAll(@Pagination() query: findAllArticlesDto) {
     return this.articlesService.findAll(query);
   }
@@ -91,6 +94,14 @@ export class ArticleController {
       'unknown';
 
     return this.articlesService.findOneAndIncrementView(+id, ipAddress, query);
+  }
+
+  @UseGuards(JwtGuard, RoleGuard)
+  // @Roles(['admin'])
+  @ApiBearerAuth('token')
+  @Post('bulk-delete')
+  async removeBulk(@Body() dto: DeleteBulkArticleDto) {
+    return this.articlesService.removeBulk(dto.ids);
   }
 
   @UseGuards(JwtGuard, RoleGuard)

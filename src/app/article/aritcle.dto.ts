@@ -3,6 +3,7 @@ import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
 import { Visibility } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
+  ArrayNotEmpty,
   IsArray,
   IsEnum,
   IsInt,
@@ -71,6 +72,28 @@ export class findAllArticlesDto extends PageRequestDto {
   @IsOptional()
   @ApiPropertyOptional({ example: 'kata kunci pencarian' })
   keyword?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({ example: 'kategori-slug' })
+  categorySlug?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({ example: 'tag-slug' })
+  tagSlug?: string;
+}
+
+export class DeleteBulkArticleDto {
+  @ApiProperty({
+    type: [Number],
+    example: [1, 2, 3],
+    description: 'Array of article IDs to delete',
+  })
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsInt({ each: true })
+  ids: number[];
 }
 
 export class ArticleDetailQueryDto {

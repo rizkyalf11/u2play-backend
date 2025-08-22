@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  isArray,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { PageRequestDto } from 'src/utils/dto/page.dto';
 
 export class CategoryDTO {
@@ -22,6 +30,18 @@ export class CategoryDTO {
   @IsOptional()
   @ApiProperty({ example: 2, description: 'Parent category ID (optional)' })
   parent_id?: number;
+}
+
+export class DeleteBulkCategoryDto {
+  @ApiProperty({
+    type: [Number],
+    example: [1, 2, 3],
+    description: 'Array of category IDs to delete',
+  })
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsInt({ each: true })
+  ids: number[];
 }
 
 export class FindAllCategoriesDto extends PageRequestDto {

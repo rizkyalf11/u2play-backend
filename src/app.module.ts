@@ -16,6 +16,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { TeamModule } from './app/team/team.module';
 import { MembersModule } from './app/members/members.module';
 import { TournamentModule } from './app/tournament/tournament.module';
+import { ParticipantsTournamentSoloModule } from './app/participants-tournament-solo/participants-tournament-solo.module';
+import { TournamentBroadcastTalentsModule } from './app/tournament-broadcast-talents/tournament-broadcast-talents.module';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { TournamentModule } from './app/tournament/tournament.module';
     TeamModule,
     MembersModule,
     TournamentModule,
+    ParticipantsTournamentSoloModule,
+    TournamentBroadcastTalentsModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService],

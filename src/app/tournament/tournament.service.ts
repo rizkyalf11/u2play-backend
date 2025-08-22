@@ -116,4 +116,26 @@ export class TournamentService extends BaseResponse {
 
     return this._pagination('success', data, count, +page, +pageSize);
   }
+
+  async getDetail(slug: string) {
+    const data = await this.prismaService.tournaments.findUnique({
+      where: {tournaments_slug: slug},
+      include: {
+        Game: true,
+        Organized: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            email: true,
+            role: true
+          }
+        }
+      }
+    })
+
+    if (!data) throw new HttpException("no data found", 404)
+
+    return this._success("tournaments found", data)
+  }
 }

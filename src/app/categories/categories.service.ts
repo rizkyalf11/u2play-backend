@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   CreateCategoryDto,
   FindAllCategoriesDto,
@@ -15,29 +15,105 @@ export class CategoriesService extends BaseResponse {
     super();
   }
 
+  async removeBulk(ids: number[]) {
+    try {
+      if (!ids || ids.length === 0) {
+        throw new HttpException(
+          {
+            code: 'NO_IDS_PROVIDED',
+            message: 'No category IDs provided for bulk delete',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // Cek apakah semua ID ada di database
+      const existingCategories = await this.prisma.category.findMany({
+        where: { id: { in: ids } },
+        select: { id: true },
+      });
+
+      const existingIds = existingCategories.map((cat) => cat.id);
+      const notFoundIds = ids.filter((id) => !existingIds.includes(id));
+
+      if (notFoundIds.length > 0) {
+        throw new HttpException(
+          {
+            code: 'CATEGORY_NOT_FOUND',
+            message: `Categories with IDs [${notFoundIds.join(', ')}] not found`,
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      // Hapus kategori sekaligus
+      const deleted = await this.prisma.category.deleteMany({
+        where: { id: { in: ids } },
+      });
+
+      return this._success(`${deleted.count} categories deleted successfully`);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        {
+          code: 'BULK_DELETE_FAILED',
+          message: error.message || 'Failed to delete categories in bulk',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   async create(data: CreateCategoryDto) {
-    // Kalau parent_id dikirim, cek apakah parent ada
+    // 🔹 Cek duplikat nama kategori
+    const existingCategory = await this.prisma.category.findFirst({
+      where: {
+        name: {
+          equals: data.name,
+        },
+      },
+    });
+
+    if (existingCategory) {
+      throw new HttpException(
+        {
+          code: 'CATEGORY_NAME_EXISTS',
+          message: `Category name "${data.name}" already exists`,
+        },
+        HttpStatus.CONFLICT, // 409 → conflict data
+      );
+    }
+
+    // 🔹 Cek parent_id jika ada
     if (data.parent_id) {
       const parent = await this.prisma.category.findUnique({
         where: { id: data.parent_id },
       });
       if (!parent) {
-        throw new NotFoundException(
-          `Parent category with ID ${data.parent_id} not found`,
+        throw new HttpException(
+          {
+            code: 'PARENT_CATEGORY_NOT_FOUND',
+            message: `Parent category with ID ${data.parent_id} not found`,
+          },
+          HttpStatus.NOT_FOUND,
         );
       }
     }
 
+    const category = await this.prisma.category.create({
+      data: {
+        name: data.name,
+        slug: data.slug,
+        parent_id: data.parent_id ?? null,
+      },
+    });
+
     return {
       success: true,
       message: 'Category created successfully',
-      data: await this.prisma.category.create({
-        data: {
-          name: data.name,
-          slug: data.slug,
-          parent_id: data.parent_id ?? null, // kalau undefined → null
-        },
-      }),
+      data: category,
     };
   }
 
@@ -84,19 +160,23 @@ export class CategoriesService extends BaseResponse {
   async findOne(id: number) {
     const category = await this.prisma.category.findUnique({
       where: { id },
-      include: {
-        // children: true,
-        // parent: true,
-      },
     });
+
     if (!category) {
-      throw new NotFoundException(`Category with ID ${id} not found`);
+      throw new HttpException(
+        {
+          code: 'CATEGORY_NOT_FOUND',
+          message: `Category with ID ${id} not found`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
     }
+
     return category;
   }
 
   async update(id: number, data: UpdateCategoryDto) {
-    await this.findOne(id); // cek dulu
+    await this.findOne(id); // cek dulu kalau tidak ada akan error
     return this.prisma.category.update({
       where: { id },
       data,
@@ -104,7 +184,7 @@ export class CategoriesService extends BaseResponse {
   }
 
   async remove(id: number) {
-    await this.findOne(id); // cek dulu
+    await this.findOne(id); // cek dulu kalau tidak ada akan error
     return this.prisma.category.delete({ where: { id } });
   }
 }

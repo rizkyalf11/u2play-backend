@@ -1,13 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-// src/app/articles/articles.service.ts
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   ArticleDetailQueryDto,
@@ -30,23 +21,39 @@ export class ArticleService extends BaseResponse {
   }
 
   async create(data: CreateArticleDto) {
+    if (!data.title || data.title.trim().length === 0) {
+      throw new HttpException(
+        { status: HttpStatus.BAD_REQUEST, message: 'Title is required' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const category = await this.prisma.category.findUnique({
       where: { id: data.category_id },
     });
 
     if (!category) {
-      throw new NotFoundException(`Category ID ${data.category_id} not found`);
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          message: `Category ID ${data.category_id} not found`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     if (!category.parent_id) {
-      throw new BadRequestException(
-        `Category ID ${data.category_id} is a parent category, please use a sub-category`,
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          message: `Category ID ${data.category_id} is a parent category, please use a sub-category`,
+        },
+        HttpStatus.BAD_REQUEST,
       );
     }
 
     const { tag_ids, ...articleData } = data;
 
-    // Validasi tag_ids
     if (tag_ids && tag_ids.length > 0) {
       const existingTags = await this.prisma.tag.findMany({
         where: { id: { in: tag_ids } },
@@ -57,8 +64,12 @@ export class ArticleService extends BaseResponse {
       const invalidTags = tag_ids.filter((id) => !existingTagIds.includes(id));
 
       if (invalidTags.length > 0) {
-        throw new NotFoundException(
-          `Tag(s) with ID ${invalidTags.join(', ')} not found`,
+        throw new HttpException(
+          {
+            status: HttpStatus.NOT_FOUND,
+            message: `Tag(s) with ID ${invalidTags.join(', ')} not found`,
+          },
+          HttpStatus.NOT_FOUND,
         );
       }
     }
@@ -84,24 +95,37 @@ export class ArticleService extends BaseResponse {
   }
 
   async findAll(params: findAllArticlesDto) {
-    const { page, pageSize, title, keyword } = params;
-
+    const { page, pageSize, title, keyword, categorySlug, tagSlug } = params;
     const skip = (page - 1) * pageSize;
 
     const where: any = {};
 
-    // Filter berdasarkan title
     if (title) {
       where.title = { contains: title };
     }
 
-    // Filter berdasarkan keyword (di title, description, atau content)
     if (keyword) {
       where.OR = [
         { title: { contains: keyword } },
         { description: { contains: keyword } },
         { content: { contains: keyword } },
       ];
+    }
+
+    if (categorySlug) {
+      where.category = {
+        slug: { contains: categorySlug },
+      };
+    }
+
+    if (tagSlug) {
+      where.article_tags = {
+        some: {
+          tag: {
+            slug: { contains: tagSlug },
+          },
+        },
+      };
     }
 
     const [articles, total] = await Promise.all([
@@ -135,8 +159,15 @@ export class ArticleService extends BaseResponse {
       },
     });
 
-    if (!article)
-      throw new NotFoundException(`Article with ID ${id} not found`);
+    if (!article) {
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          message: `Article with ID ${id} not found`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
 
     return this._success('Article fetched successfully', { data: article });
   }
@@ -191,7 +222,13 @@ export class ArticleService extends BaseResponse {
     });
 
     if (!article) {
-      throw new NotFoundException(`Article with ID ${id} not found`);
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          message: `Article with ID ${id} not found`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -263,5 +300,38 @@ export class ArticleService extends BaseResponse {
       latest: latestArticles.map(formatArticle),
       recommendations: recommendations.map(formatArticle),
     });
+  }
+
+  async removeBulk(ids: number[]) {
+    // Cek apakah semua ID valid
+    const existingArticles = await this.prisma.articles.findMany({
+      where: { id: { in: ids } },
+      select: { id: true },
+    });
+
+    const existingIds = existingArticles.map((a) => a.id);
+    const notFoundIds = ids.filter((id) => !existingIds.includes(id));
+
+    if (notFoundIds.length > 0) {
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          message: `Article(s) with ID ${notFoundIds.join(', ')} not found`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    // Hapus relasi article_tags terlebih dahulu
+    await this.prisma.articleTag.deleteMany({
+      where: { article_id: { in: ids } },
+    });
+
+    // Hapus artikelnya
+    const deleted = await this.prisma.articles.deleteMany({
+      where: { id: { in: ids } },
+    });
+
+    return this._success('Articles deleted successfully', { data: deleted });
   }
 }

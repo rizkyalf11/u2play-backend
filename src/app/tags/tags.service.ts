@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTagDto, FindAllTagsDto, UpdateTagDto } from './tags.dto';
 import BaseResponse from 'src/utils/baseresponse/baseresponse.class';
@@ -12,12 +17,33 @@ export class TagsService extends BaseResponse {
   }
 
   async create(data: CreateTagDto) {
-    const tag = await this.prisma.tag.create({ data });
-    return {
-      success: true,
-      message: 'Tag created successfully',
-      data: tag,
-    };
+    try {
+      // Cek duplikasi slug
+      const exists = await this.prisma.tag.findFirst({
+        where: { slug: data.slug },
+      });
+      if (exists) {
+        throw new HttpException(
+          {
+            status: HttpStatus.CONFLICT,
+            message: `Tag with slug "${data.slug}" already exists`,
+          },
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      const tag = await this.prisma.tag.create({ data });
+      return this._success('Tag created successfully', { data: tag });
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error.message || 'Failed to create tag',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async findAll(query: FindAllTagsDto) {
