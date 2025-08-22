@@ -117,9 +117,9 @@ export class TournamentService extends BaseResponse {
     return this._pagination('success', data, count, +page, +pageSize);
   }
 
-  async getDetail(id: number) {
+  async getDetail(slug: string) {
     const data = await this.prismaService.tournaments.findUnique({
-      where: {id},
+      where: {tournaments_slug: slug},
       include: {
         Game: true,
         Organized: {

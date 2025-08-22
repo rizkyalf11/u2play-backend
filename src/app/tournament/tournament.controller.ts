@@ -47,8 +47,8 @@ export class TournamentController {
     return this.tournamentService.getTournamets(query);
   }
 
-  @Get('/detail/:id')
-  getDetail(@Param('id') id: number) {
-    return this.tournamentService.getDetail(id);
+  @Get('/detail/:slug')
+  getDetail(@Param('slug') slug: string) {
+    return this.tournamentService.getDetail(slug)
   }
 }
