@@ -12,6 +12,7 @@ import {
 } from './team.dto';
 import { REQUEST } from '@nestjs/core';
 import { filter } from 'rxjs';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TeamService extends BaseResponse {
@@ -20,6 +21,41 @@ export class TeamService extends BaseResponse {
     @Inject(REQUEST) private req: any,
   ) {
     super();
+  }
+
+  async checkMyMembership() {
+    const where: any = {
+      user_id: this.req.user.id,
+      status: 'joined',
+    };
+
+    const member = await this.prismaService.teamMembers.findFirst({
+      where,
+      include: {
+        team: {
+          select: {
+            id: true,
+            name: true,
+            game: { select: { id: true, name: true } },
+          },
+        },
+      },
+    });
+
+    const data = {
+      inTeam: !!member,
+      memberId: member?.id ?? null,
+      role: member?.role ?? null,
+      team: member
+        ? {
+            id: member.team.id,
+            name: member.team.name,
+            game: member.team.game,
+          }
+        : null,
+    };
+
+    return this._success('membership status fetched', data);
   }
 
   async createTeam(payload: CreateTeamDto) {
@@ -49,6 +85,17 @@ export class TeamService extends BaseResponse {
           },
         });
       } else {
+        const dup = await this.prismaService.teams.findFirst({
+          where: { game_id: payload.game_id, name: payload.name },
+          select: { id: true },
+        });
+
+        if (dup) {
+          throw new HttpException(
+            'Team name already used for this game',
+            HttpStatus.UNPROCESSABLE_ENTITY,
+          );
+        }
         data = await this.prismaService.teams.create({
           data: {
             ...payload,
@@ -69,6 +116,13 @@ export class TeamService extends BaseResponse {
 
       return this._success('Team created successfully', data);
     } catch (error) {
+      console.log(error.message);
+      if (error.message == 'Team name already used for this game') {
+        throw new HttpException(
+          'Team name already used for this game',
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      }
       throw new HttpException(
         'Failed to create team',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -286,23 +340,25 @@ export class TeamService extends BaseResponse {
       },
     });
 
-    if (!!findInvitedMember && ['leaved', 'rejected'].includes(findInvitedMember.status)) {
+    if (
+      !!findInvitedMember &&
+      ['leaved', 'rejected'].includes(findInvitedMember.status)
+    ) {
       try {
         await this.prismaService.teamMembers.update({
           where: findInvitedMember,
           data: {
-            status: 'invited'
-          }
-        })
+            status: 'invited',
+          },
+        });
 
         return this._success('Member re-invited successfully');
       } catch (error) {
         throw new HttpException(
-        'Failed to invite member',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+          'Failed to invite member',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
-      
     } else if (!!findInvitedMember) {
       throw new HttpException(
         'User is already invited to your team',
@@ -396,7 +452,7 @@ export class TeamService extends BaseResponse {
 
     try {
       const data = await this.prismaService.teamMembers.findMany({
-        where: {...filterQuery, team_id: foundData.id},
+        where: { ...filterQuery, team_id: foundData.id },
         take: +pageSize,
         skip: limit,
         include: {
@@ -412,7 +468,7 @@ export class TeamService extends BaseResponse {
       });
 
       const count = await this.prismaService.teamMembers.count({
-        where: {...filterQuery, team_id: foundData.id},
+        where: { ...filterQuery, team_id: foundData.id },
       });
 
       return this._pagination(
@@ -430,11 +486,7 @@ export class TeamService extends BaseResponse {
     }
   }
 
-  async updateMemberData(
-    idMember: number,
-    payload: UpdateTeamMember,
-  ) {
-
+  async updateMemberData(idMember: number, payload: UpdateTeamMember) {
     const foundMember = await this.prismaService.teamMembers.findUnique({
       where: { id: idMember },
     });
@@ -471,8 +523,6 @@ export class TeamService extends BaseResponse {
       );
     }
 
-    
-
     try {
       const data = await this.prismaService.teamMembers.update({
         where: foundMember,
@@ -488,7 +538,7 @@ export class TeamService extends BaseResponse {
     }
   }
 
-  async kickMember( IdMember: number) {
+  async kickMember(IdMember: number) {
     const foundMember = await this.prismaService.teamMembers.findFirst({
       where: {
         id: IdMember,
@@ -532,8 +582,6 @@ export class TeamService extends BaseResponse {
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
-
-    
 
     try {
       await this.prismaService.teamMembers.update({

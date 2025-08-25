@@ -37,6 +37,20 @@ export class TeamController {
     return this.teamService.createTeam(payload);
   }
 
+  @UseGuards(JwtGuard, RoleGuard)
+  @Roles(['user'])
+  @ApiBearerAuth('token')
+  @Get('/me/membership')
+  @ApiQuery({
+    name: 'gameId',
+    required: false,
+    description: 'Filter membership untuk game tertentu (opsional)',
+    example: 1,
+  })
+  checkMyMembership() {
+    return this.teamService.checkMyMembership();
+  }
+
   @Get('/')
   @ApiPaginationQuery()
   @ApiQuery({

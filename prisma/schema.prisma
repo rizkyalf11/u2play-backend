@@ -235,6 +235,7 @@ model Teams {
 
   TeamMembers TeamMembers[]
 
+  @@unique([game_id, name], name: "teams_game_name_unique") // <<— ini yang penting
   @@map("teams")
 }
 
