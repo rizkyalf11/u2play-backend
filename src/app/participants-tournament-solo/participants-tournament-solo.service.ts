@@ -85,7 +85,6 @@ export class ParticipantsTournamentSoloService extends BaseResponse {
             select: { id: true, username: true, email: true }, // hanya ambil field penting
           },
         },
-        orderBy: { created_at: 'desc' },
       }),
       this.prisma.participants_tournament_solo.count({ where }),
     ]);
