@@ -130,7 +130,13 @@ export class TournamentService extends BaseResponse {
             email: true,
             role: true
           }
+        },
+        _count: {
+          select: {
+            participants_solo: true
+          }
         }
+        
       }
     })
 
