@@ -106,6 +106,69 @@ export class TournamentService extends BaseResponse {
             email: true,
             role: true
           }
+        },
+        _count: {
+          select: {
+            participants_solo: true
+          }
+        }
+      }
+    });
+
+    const count = await this.prismaService.tournaments.count({
+      where: filterQuery,
+    });
+
+    return this._pagination('success', data, count, +page, +pageSize);
+  }
+
+  async getMyTournamets(query: GetTournamentFilter) {
+    const { limit, pageSize, page, keyword, status, game_id } = query;
+
+    const filterQuery: {
+      [key: string]: any;
+    } = {};
+
+    if (!!keyword) {
+      filterQuery.OR = [{ tournament_name: {contains: keyword} }, { description: {contains: keyword} }];
+    }
+
+    if (!!game_id) {
+      filterQuery.game_id = +game_id;
+    }
+
+    if (!!status) {
+      if (
+        !['pending', 'in_progress', 'awaiting_review', 'complete'].includes(
+          status,
+        )
+      )
+        throw new HttpException(
+          'please input correct status',
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      filterQuery.status = status;
+    }
+
+    const data = await this.prismaService.tournaments.findMany({
+      where: {...filterQuery, organized_by: this.req.user.id},
+      skip: limit,
+      take: +pageSize,
+      include: {
+        Game: true,
+        Organized: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            email: true,
+            role: true
+          }
+        },
+        _count: {
+          select: {
+            participants_solo: true
+          }
         }
       }
     });

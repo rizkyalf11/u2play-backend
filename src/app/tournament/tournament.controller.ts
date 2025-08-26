@@ -47,6 +47,31 @@ export class TournamentController {
     return this.tournamentService.getTournamets(query);
   }
 
+  @ApiBearerAuth('token')
+  @UseGuards(JwtGuard, RoleGuard)
+  @Roles(['organizer'])
+  @Get('/my')
+  @ApiPaginationQuery()
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    description: 'Filter by name and desc',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description:
+      'Status harus salah satu dari: pending, in_progress, awaiting-review, complete',
+  })
+  @ApiQuery({
+    name: 'game_id',
+    required: false,
+    description: 'game id',
+  })
+  getMyTournaments(@Pagination() query: GetTournamentFilter) {
+    return this.tournamentService.getTournamets(query);
+  }
+
   @Get('/detail/:slug')
   getDetail(@Param('slug') slug: string) {
     return this.tournamentService.getDetail(slug);
